@@ -41,7 +41,7 @@ global.document = {
 };
 global.location = { search: '', href: 'http://localhost/' };
 global.localStorage = { getItem: () => null, setItem() {} };
-global.navigator = {};
+Object.defineProperty(global, 'navigator', { value: {}, configurable: true, writable: true });
 global.requestAnimationFrame = () => {};
 global.performance = { now: () => Date.now() };
 
@@ -55,7 +55,7 @@ const nodePos = (S, n) => [S.cities[n.cityIdx].x, S.cities[n.cityIdx].y];
 /* ---------- policies ---------- */
 function makePolicy(policy, S, rngSeed) {
   const prand = mulberry32Local(rngSeed || 12345);
-  const st = { react: 1 + prand() * 2, seen: new Map(), rolled: new Map(), swiped: new Set(), retried: new Set(), gi: 0, placeT: 0 };
+  const st = { react: 1 + prand() * 2, seen: new Map(), rolled: new Map(), swiped: new Set(), retried: new Set(), relocated: new Set(), gi: 0, placeT: 0 };
   const greedyOrder = [0, 1, 2, 4, 3];
   const humanOrder = [0, 2, 1, 3, 4];
   const killR = G.CONFIG.bots.killRadiusPx / G.mapScale;   // explicit WORLD radii => deterministic
@@ -91,6 +91,16 @@ function makePolicy(policy, S, rngSeed) {
       }
       if (S.nodes.length > 0 && prand() < DT / 25) { const n = S.nodes[Math.floor(prand() * S.nodes.length)]; G.applyAction({ type: 'move', node: n.id, city: Math.floor(prand() * 15) }); }
       return;
+    }
+    /* expert reacts once to an outage by moving a different, idle online node to an uncovered city. */
+    if (policy === 'expert' && S.activeEvent && S.activeEvent.type === 'outage') {
+      const key=S.activeEvent.endT;
+      if (!st.relocated.has(key)) {
+        st.relocated.add(key);
+        const n=S.nodes.find(x=>x.state==='online' && x.load===0 && x.cityIdx>=3);
+        const target=[0,1,2,4,3].find(ci=>!S.nodes.some(x=>x.cityIdx===ci));
+        if(n && target!==undefined) G.applyAction({type:'move',node:n.id,city:target});
+      }
     }
     /* human / expert */
     st.placeT -= DT;
@@ -222,6 +232,10 @@ function testSwipeRadii() {
   const off = (G.CONFIG.bots.killRadiusPx + 30) / G.mapScale;
   k = G.applySwipe(470, 400 + off, 530, 400 + off, killR, 1);
   check('swipe far off the line misses', k === 0 && S.bots.find(x => x.id === 4243).alive);
+  const b3 = {id:4244,x:500,y:400,targetNodeId:0,speed:0,alive:true,rot:0}; S.bots.push(b3);
+  G.applyAction({type:'swipe',x1:470,y1:410,x2:530,y2:410,killR:2,friendR:1});
+  check('applyAction passes explicit world radii', b3.alive);
+
 }
 function testBands() {
   const N = 30;

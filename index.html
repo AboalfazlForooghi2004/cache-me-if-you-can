@@ -92,6 +92,11 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 #debug{position:absolute;top:120px;inset-inline-start:8px;background:rgba(0,0,0,.7);color:#7CF5D8;font:11px monospace;padding:6px 8px;border-radius:8px;display:none;z-index:35;pointer-events:none;white-space:pre}
 #countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:90px;font-weight:900;color:var(--turq);z-index:45;pointer-events:none;text-shadow:0 0 40px rgba(45,212,191,.6)}
 #boot{position:absolute;inset:0;background:var(--bg0);display:flex;align-items:center;justify-content:center;z-index:60;font-size:44px;transition:opacity .4s}
+@media (max-width:430px) and (orientation:portrait){
+.bottombar{gap:4px;padding-inline:6px;justify-content:space-between}
+.tray{gap:4px;flex:0 1 auto}.slot{width:clamp(39px,11vw,48px);height:48px}
+.sideinfo{min-width:0;flex:1;margin-inline-start:0}#spark{width:100%;max-width:75px}
+}
 @media (min-width:900px) and (min-aspect-ratio:6/5){
 #wrap.wide .bottombar{position:absolute;top:calc(var(--hud-top) + 4px);bottom:0;right:0;width:180px;margin:0;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:12px;padding:12px 10px;background:linear-gradient(270deg,rgba(7,11,24,.94),rgba(7,11,24,.65) 80%,transparent)}
 #wrap.wide .tray{flex-wrap:wrap;justify-content:center}
@@ -136,7 +141,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 
 <div class="overlay" id="ovMenu"><div class="card">
   <h1>کَشَم کن اگه می‌تونی</h1>
-  <div class="sub">ایران رو سریع کن! 🛕 نود بذار، گرمش کن، ربات‌ها رو بزن</div>
+  <div class="sub">ایران رو سریع کن! 🛕 نود بذار، گرمش کن، ترافیک مخرب رو فیلتر کن</div>
   <div class="bestchip" id="menuBest">🏆 بهترین رکورد: ۰</div>
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
@@ -152,12 +157,12 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 <div class="overlay" id="ovHow"><div class="card">
   <h2>چطور بازی کنم؟</h2>
   <div class="howcards">
-    <div class="howcard"><div class="ic">🛕</div><div class="t">۱. نود بذار</div><div class="d">روی شهر بزن تا نود لبه بسازی</div></div>
+    <div class="howcard"><div class="ic">🛕</div><div class="t">۱. نود بذار</div><div class="d">روی شهر لمس کن تا نود لبه بسازی</div></div>
     <div class="howcard"><div class="ic">🔥</div><div class="t">۲. نود گرم می‌شه</div><div class="d">با ترافیک گرم می‌شه و سریع‌تر می‌شه</div></div>
-    <div class="howcard"><div class="ic">✋</div><div class="t">۳. ربات‌ها رو بزن</div><div class="d">با کشیدن انگشت ربات‌های قرمز رو نابود کن</div></div>
+    <div class="howcard"><div class="ic">✋</div><div class="t">۳. ترافیک مخرب رو فیلتر کن</div><div class="d">با کشیدن انگشت ترافیک مخرب رو فیلتر کن</div></div>
   </div>
-  <div class="tip">نود رو بکش و جابه‌جا کن — ولی کَشش پاک می‌شه! سرور مبدأ خیلی دوره، پس نودها رو پخش کن.</div>
-  <button class="btn primary" id="btnHowGo">بزن بریم!</button>
+  <div class="tip">نود رو نگه دار و جابه‌جا کن — ولی کَشش پاک می‌شه! سرور مبدأ خیلی دوره، پس نودها رو پخش کن.</div>
+  <button class="btn primary" id="btnHowGo">شروع کنیم!</button>
   <button class="btn ghost" id="btnHowBack">برگرد</button>
 </div></div>
 
@@ -170,7 +175,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 </div></div>
 
 <div class="overlay" id="ovOver"><div class="card">
-  <h2>💥 بازی تموم شد!</h2>
+  <h2>بازی تموم شد!</h2>
   <div class="sub" id="overMode"></div>
   <div class="bigscore" id="overScore">۰</div>
   <div class="scorelabel">امتیاز</div>
@@ -243,7 +248,7 @@ const OUTLINE=OUTLINE_LL.map(function(p){return proj(p[0],p[1])});
 const NODE_COLORS=['#2DD4BF','#5CB8FF','#A78BFA','#F472B6','#A3E635'];
 const RANKS=[[0,'کاربر صبور','خودت صبور بودی، ولی کاربرات نه!'],[1500,'کارآموز DevOps','نیمه‌شب هم بیدارت می‌کنن؛ عادت کن.'],[9000,'مهندس شبکه','پینگت داره پایین میاد؛ مسیر درسته.'],[24000,'ارباب کَش','کَش‌ها به اسم تو قسم می‌خورن.'],[50000,'افسانه‌ی لبه','ایران رو تو یه چشم‌به‌هم‌زدن سریع کردی!'],[122000,'خدای تأخیر صفر','سرور مبدأ داره بهت تعظیم می‌کنه.']];
 function rankFor(s){var r=RANKS[0];for(var i=0;i<RANKS.length;i++)if(s>=RANKS[i][0])r=RANKS[i];return r}
-const TIPS=['نود تازه سرده؛ چند تا درخواست بهش بده تا گرم شه.','جابه‌جا کردنِ زیاد، کَش رو از بین می‌بره.','تهران شلوغ‌ترین شهره، ولی همه‌چی تهران نیست!','موقع حمله فقط ربات‌های قرمز رو بزن.','بعد از قطعی برق، نود دوباره باید گرم شه.','نودها رو پخش کن، نه روی هم.'];
+const TIPS=['نود تازه سرده؛ چند تا درخواست بهش بده تا گرم شه.','جابه‌جا کردنِ زیاد، کَش رو از بین می‌بره.','تهران شلوغ‌ترین شهره، ولی همه‌چی تهران نیست!','در موج فقط ترافیک مخرب رو فیلتر کن.','بعد از قطعی برق، نود دوباره باید گرم شه.','نودها رو پخش کن، نه روی هم.'];
 /* ================= STORAGE ================= */
 const Store={mem:null,load:function(){try{var s=localStorage.getItem('cmiyc.v1');if(s)return JSON.parse(s)}catch(e){}return this.mem||null},save:function(d){this.mem=d;try{localStorage.setItem('cmiyc.v1',JSON.stringify(d))}catch(e){}}};
 function defaultData(){return{settings:{sound:true,haptics:true,reducedMotion:null,lang:'fa'},best:0,top:[],daily:{},tutorialSeen:false,runs:0}}
@@ -467,7 +472,7 @@ function applyAction(a){
  if(!S||S.over)return;
  if(a.type==='place')placeNode(a.city);
  else if(a.type==='move')moveNode(a.node,a.city);
- else if(a.type==='swipe')applySwipe(a.x1,a.y1,a.x2,a.y2);
+ else if(a.type==='swipe')applySwipe(a.x1,a.y1,a.x2,a.y2,a.killR,a.friendR);
 }
 function snapshot(){if(!S)return null;return{score:S.score,sla:S.sla,t:S.t,served:S.served,timeouts:S.timeouts,combo:S.combo,nodes:S.nodes.length,requests:S.requests.length,bots:S.bots.length,over:S.over}}
 /* ================= AUDIO ================= */
@@ -598,23 +603,28 @@ function renderInner(tNow){
   ctx.beginPath();ctx.arc(px,py,2.5,0,6.29);ctx.fillStyle=(r.route==='hit')?'#2DD4BF':'#FFFFFF';ctx.fill();
  }
  var pendByCity=[];for(var rq=0;rq<S.requests.length;rq++){var rqv=S.requests[rq];if(!pendByCity[rqv.city])pendByCity[rqv.city]=[];pendByCity[rqv.city].push(rqv)}
+ var labelBoxes=[];for(var ni0=0;ni0<S.nodes.length;ni0++){var pp=w2s(S.cities[S.nodes[ni0].cityIdx].x,S.cities[S.nodes[ni0].cityIdx].y);labelBoxes.push({l:pp.x-21,r:pp.x+21,t:pp.y-40,b:pp.y+3})}
  for(var ci=0;ci<S.cities.length;ci++){var cc2=S.cities[ci];var sp=w2s(cc2.x,cc2.y);
   ctx.beginPath();ctx.arc(sp.x,sp.y,6,0,6.29);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();ctx.strokeStyle='#2A3A6B';ctx.lineWidth=1.5;ctx.stroke();
   ctx.fillStyle='#E8EEFF';ctx.font='11px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';ctx.textAlign='center';ctx.direction='rtl';
-  var lx=sp.x,ly=sp.y+22;if(cc2.side==='n')ly=sp.y-12;if(cc2.side==='w'){lx=sp.x-26;ly=sp.y+4}if(cc2.side==='e'){lx=sp.x+26;ly=sp.y+4}if(cc2.side==='s')ly=sp.y+22;
-  ctx.fillText(CITIES[ci].fa,lx,ly);
+  var label=CITIES[ci].fa, mt=ctx.measureText(label), tw=(mt&&mt.width)||30, candidates=[[0,23],[0,-19],[32,4],[-32,4],[30,22],[-30,22],[30,-17],[-30,-17]], lx=sp.x,ly=sp.y+23;
+  for(var li2=0;li2<candidates.length;li2++){var xx=sp.x+candidates[li2][0],yy=sp.y+candidates[li2][1];var box={l:xx-tw/2-2,r:xx+tw/2+2,t:yy-11,b:yy+3},ok=box.l>=2&&box.r<=VW-2&&box.t>=playRect.y&&box.b<=VH-2;
+   for(var lb=0;ok&&lb<labelBoxes.length;lb++){var ob=labelBoxes[lb];if(box.l<ob.r&&box.r>ob.l&&box.t<ob.b&&box.b>ob.t)ok=false}
+   if(ok){lx=xx;ly=yy;break}
+  }
+  labelBoxes.push({l:lx-tw/2-2,r:lx+tw/2+2,t:ly-11,b:ly+3});ctx.fillText(label,lx,ly);
   var pend=pendByCity[ci]||EMPTYQ;
   var show=Math.min(5,pend.length);
-  for(var fi=0;fi<show;fi++){var q=pend[fi];var rem=clamp((q.patience-(S.t-q.spawnT))/q.patience,0,1);var ang=fi/show*6.29+tNow*0.5;var fx=sp.x+Math.cos(ang)*16,fy=sp.y+Math.sin(ang)*16;drawFace(ctx,fx,fy,6,rem,rem<0.15)}
+  for(var fi=0;fi<show;fi++){var q=pend[fi];var rem=clamp((q.patience-(S.t-q.spawnT))/q.patience,0,1);var ang=fi/show*6.29+tNow*0.5;var fx=sp.x+Math.cos(ang)*16,fy=sp.y+Math.sin(ang)*16;drawFace(ctx,fx,fy,9,rem,rem<0.15)}
   if(pend.length>5){ctx.fillStyle='#FFA94D';ctx.font='900 11px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';ctx.fillText('+'+toFa(pend.length-5),sp.x+18,sp.y-14)}
  }
- for(var ni=0;ni<S.nodes.length;ni++){var n=S.nodes[ni];var np2=w2s(S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);var sc=1+Math.min(0.3,Math.max(0,(S.t-n.spawnT))*2);if(S.t-n.spawnT<0.5)sc=0.3+(S.t-n.spawnT)/0.5*0.7;drawDome(ctx,np2.x,np2.y-14,sc,n,tNow)}
+ for(var ni=0;ni<S.nodes.length;ni++){var n=S.nodes[ni];var np2=w2s(S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);var sc=1+Math.min(0.3,Math.max(0,(S.t-n.spawnT))*2);if(S.t-n.spawnT<0.5)sc=0.3+(S.t-n.spawnT)/0.5*0.7;drawDome(ctx,np2.x,np2.y-14,sc*(VW>=900?1.05:0.82),n,tNow)}
  var selN=selectedNode?nodeById(selectedNode):null;
  if(selN&&selN.state==='online'){var sp3=w2s(S.cities[selN.cityIdx].x,S.cities[selN.cityIdx].y);ctx.strokeStyle='#F5C451';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(sp3.x,sp3.y-14,26+Math.sin(tNow*6)*2,0,6.29);ctx.stroke()}
  if(dragNode||selectedNode){for(var ec=0;ec<S.cities.length;ec++){if(cityHasNode(ec))continue;var ep=w2s(S.cities[ec].x,S.cities[ec].y);var pa=0.35+0.3*Math.sin(tNow*5+ec);ctx.strokeStyle='rgba(45,212,191,'+pa.toFixed(2)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ep.x,ep.y,12+2*Math.sin(tNow*5+ec),0,6.29);ctx.stroke()}}
  if(S.tutorial&&S.tutCur===0){var tp=w2s(CITIES[0].x,CITIES[0].y);var prr=14+Math.sin(tNow*5)*4;ctx.strokeStyle='rgba(45,212,191,0.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(tp.x,tp.y,prr,0,6.29);ctx.stroke();ctx.strokeStyle='rgba(45,212,191,0.35)';ctx.beginPath();ctx.arc(tp.x,tp.y,prr+7,0,6.29);ctx.stroke()}
  if(S.tutorial&&S.tutCur===3&&!reducedMotion()){var hxf=playRect.x+playRect.w*0.25+((tNow*0.35)%1)*playRect.w*0.5;var hyf=playRect.y+playRect.h*0.5+Math.sin(tNow*2)*30;ctx.font='28px sans-serif';ctx.textAlign='center';ctx.fillText('✋',hxf,hyf);ctx.strokeStyle='rgba(45,212,191,0.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(hxf-44,hyf+16);ctx.quadraticCurveTo(hxf-22,hyf-16,hxf,hyf+8);ctx.stroke()}
- for(var bi=0;bi<S.bots.length;bi++){var b=S.bots[bi];var bp=w2s(b.x,b.y);ctx.save();ctx.translate(bp.x,bp.y);ctx.rotate(b.rot);ctx.fillStyle='#FF5C6C';ctx.beginPath();for(var s=0;s<8;s++){var a=s/8*6.29;var rr=s%2?8:14;var bx=Math.cos(a)*rr,by=Math.sin(a)*rr;if(s===0)ctx.moveTo(bx,by);else ctx.lineTo(bx,by)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-4,-2,2,0,6.29);ctx.arc(4,-2,2,0,6.29);ctx.fill();ctx.restore()}
+ for(var bi=0;bi<S.bots.length;bi++){var b=S.bots[bi];var bp=w2s(b.x,b.y);ctx.save();ctx.translate(bp.x,bp.y);ctx.rotate(b.rot);ctx.fillStyle='#9B8CFF';ctx.fillRect(-9,-9,18,18);ctx.strokeStyle='#7CF5D8';ctx.lineWidth=2;ctx.strokeRect(-10,-10,20,20);ctx.fillStyle='#D8FFFA';ctx.fillRect(-5,-4,3,3);ctx.fillRect(2,2,4,3);ctx.restore()}
  var og=clamp(S.originInFlight/effConcurrency(),0,1.5);
  ctx.fillStyle='#1B2748';ctx.fillRect(portal.x-16,portal.y-26,32,52);ctx.strokeStyle=og>1?'#FF5C6C':og>0.6?'#FFA94D':'#2DD4BF';ctx.lineWidth=2;ctx.strokeRect(portal.x-16,portal.y-26,32,52);
  ctx.fillStyle=og>1?'#FF5C6C':'#2DD4BF';for(var li=0;li<3;li++)if(Math.sin(tNow*4+li)>-0.5)ctx.fillRect(portal.x-10,portal.y-18+li*10,6,4);
@@ -629,6 +639,7 @@ function renderInner(tNow){
  if(flashT>0){ctx.fillStyle='rgba(255,255,255,'+(flashT*0.7)+')';ctx.fillRect(0,0,VW,VH);flashT-=0.016}
  if(shakeT>0)shakeT-=0.016;
 }
+function shieldBurst(x,y){burst(x,y,'#7CF5D8',10);floaters.push({x:x,y:y,txt:'🛡',col:'#7CF5D8',life:0.8})}
 function burst(x,y,col,n){if(reducedMotion())n=Math.ceil(n*0.3);for(var i=0;i<n&&particles.length<300;i++)particles.push({x:x,y:y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-1,life:0.5+Math.random()*0.4,col:col})}
 function floater(x,y,txt,col){if(floaters.length<30)floaters.push({x:x,y:y,txt:txt,col:col,life:1})}
 /* ================= INPUT ================= */
@@ -678,7 +689,7 @@ function endPointer(e){
   if(selectedNode&&ci2>=0&&!cityHasNode(ci2)){var sn=nodeById(selectedNode);if(sn&&sn.state==='online'){moveNode(selectedNode,ci2);AudioSys.place()}selectedNode=null}
   else if(ci2>=0){
    if(selectedNode){selectedNode=null}
-   if(cityHasNode(ci2)){var hn=nearestNode(p.x,p.y);if(hn&&hn.state==='online'){selectedNode=hn.id;toast('شهر مقصد رو بزن');AudioSys.tick()}else{toast('اینجا که نود داره!');AudioSys.tick()}}
+   if(cityHasNode(ci2)){var hn=nearestNode(p.x,p.y);if(hn&&hn.state==='online'){selectedNode=hn.id;toast('شهر مقصد رو انتخاب کن');AudioSys.tick()}else{toast('اینجا که نود داره!');AudioSys.tick()}}
    else if(S.nodes.length>=S.slotsTotal){toast('جای خالی نداری — یه نود رو جابه‌جا کن');shakeTray();AudioSys.tick()}
    else if(placeNode(ci2)){AudioSys.place();vibrate(10);var sp=w2s(S.cities[ci2].x,S.cities[ci2].y);burst(sp.x,sp.y,'#2DD4BF',16)}
   }else{selectedNode=null}
@@ -812,7 +823,7 @@ function gameOverUI(){
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  showOverlay('ovOver');
 }
-const TUT_MSGS=['روی تهران بزن، نود بذار 👆','نود تازه سرده 🥶 — با ترافیک گرم می‌شه','هر شهر می‌ره سراغ نزدیک‌ترین نود','ربات‌ها! با انگشتت بزنشون ✋ به شهرها دست نزن!','می‌تونی نودها رو جابه‌جا کنی — ولی کَشش پاک می‌شه!'];
+const TUT_MSGS=['روی تهران لمس کن، نود بذار 👆','نود تازه سرده 🥶 — با ترافیک گرم می‌شه','هر شهر می‌ره سراغ نزدیک‌ترین نود','ترافیک مخرب! با انگشت فیلترش کن ✋ به شهرها دست نزن!','می‌تونی نودها رو جابه‌جا کنی — ولی کَشش پاک می‌شه!'];
 function tutShow(i){var el=$('tut');el.textContent=TUT_MSGS[i];el.classList.add('show');S.tutCur=i;S.tutNext=i+1;S.tutShownAt=S.t;S.tutVisible=true}
 function tutHide(){var el=$('tut');el.classList.remove('show');S.tutVisible=false}
 function finishTutorial(){if(!S)return;DB.tutorialSeen=true;saveDB();tutHide();$('tutSkip').style.display='none';S.tutorial=false;S.tutCur=-1}
@@ -836,18 +847,18 @@ function handleEvents(){
   else if(ev.type==='requestServed'){var sp=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp.x,sp.y-20,'+'+toFa(ev.pts),ev.fast?'#7CF5D8':'#FFA94D');if(ev.fast){burst(sp.x,sp.y,'#2DD4BF',4);AudioSys.hit(S.combo);if(S.combo%5===0)vibrate(8)}else AudioSys.tick()}
   else if(ev.type==='requestTimeout'){var sp2=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp2.x,sp2.y-20,'!','#FF5C6C');burst(sp2.x,sp2.y,'#FF5C6C',8);AudioSys.timeout();vibrate(30)}
   else if(ev.type==='comboUp'){banner('🔥 کمبو ×'+toFa(ev.mult.toFixed(1)),'gold');AudioSys.comboUp(S.combo);vibrate(20)}
-  else if(ev.type==='botKilled'){var bp=w2s(ev.x,ev.y);burst(bp.x,bp.y,'#FF5C6C',10);floater(bp.x,bp.y,'+'+toFa(CONFIG.score.botKill),'#FF5C6C');AudioSys.zap();vibrate(8)}
+  else if(ev.type==='botKilled'){var bp=w2s(ev.x,ev.y);shieldBurst(bp.x,bp.y);floater(bp.x,bp.y,'+'+toFa(CONFIG.score.botKill),'#FF5C6C');AudioSys.zap();vibrate(8)}
   else if(ev.type==='botLeaked'){shakeT=6;vigT=1;AudioSys.leak();vibrate(40)}
-  else if(ev.type==='nodeAttacked'){toast('⚠ نود زیر حمله‌ست!')}
+  else if(ev.type==='nodeAttacked'){toast('⚠ نود درگیر ترافیک مخربه!')}
   else if(ev.type==='nodeOffline'){toast('🔌 قطعی برق! یه نود آفلاین شد')}
-  else if(ev.type==='waveWarn'){banner(ev.boss?'👹 حمله بزرگ DDoS!':'⚠ حمله DDoS!','warn');AudioSys.siren();vigT=1;vibrate(60);if(S.tutorial)S.tutWave=true}
-  else if(ev.type==='waveClear'){if(S.tutorial&&ev.k===1)S.tutWaveClear=true;if(ev.perfect){banner('موج بی‌نقص! 🛡 +'+toFa(CONFIG.score.perfectWave),'gold');flashT=1;AudioSys.fanfare();vibrate(40)}else banner('موج تموم شد','good')}
+  else if(ev.type==='waveWarn'){banner(ev.boss?'⚠ ترافیک مخرب در راهه! فیلترش کن 🛡':'⚠ ترافیک مخرب در راهه! فیلترش کن 🛡','warn');AudioSys.siren();vigT=1;vibrate(60);if(S.tutorial)S.tutWave=true}
+  else if(ev.type==='waveClear'){if(S.tutorial&&ev.k===1)S.tutWaveClear=true;if(ev.perfect){banner('فیلتر بی‌نقص! 🛡 +'+toFa(CONFIG.score.perfectWave),'gold');flashT=1;AudioSys.fanfare();vibrate(40)}else banner('موج تموم شد','good')}
   else if(ev.type==='eventStart'){
    var names={yalda:'🍉 شب یلداست! همه بیدارن، همه آنلاین‌ان',blackfriday:'🛒 بلک‌فرایدی! شهر داره می‌ترکه',viral:'🔥 توییتت وایرال شد! یه شهر شلوغ شد',outage:'🔌 قطعی برق! یکی از نودها آفلاین شد'};
    banner(names[ev.etype]||'رویداد!','gold');AudioSys.stinger();vibrate(20);
   }
   else if(ev.type==='slotUnlocked'){toast('یه نود جدید باز شد!');AudioSys.unlock();vibrate(15)}
-  else if(ev.type==='friendlyFire'){toast('💥 به شهر دست نزن!');AudioSys.timeout()}
+  else if(ev.type==='friendlyFire'){toast('ترافیک سالم رو فیلتر کردی!');AudioSys.timeout()}
   else if(ev.type==='gameOver'){AudioSys.gameover();vibrate(80);gameOverUI()}
  }
  S.events.length=0;

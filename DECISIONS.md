@@ -66,3 +66,16 @@ Bands: lazy 25–50 ✓ · novice 60–110 ✓ · human 90–180 ✓ · greedy p
 - No leaderboard (single offline file). Persian-only UI (language toggle cut per review item 15).
 - Expert bot needs a point-blank “panic swipe” (bots can spawn ~30 u from a node — faster than any 0.3 s reaction); documented in harness comments.
 - Committed screenshot subset only; regenerate the full matrix with `tests/visual_qa.py`.
+
+---
+
+## V2 started — partial P0 only, NOT feature-complete
+
+This section supersedes earlier claims wherever they conflict. No Arvan deployment was performed.
+
+- Test stub uses `Object.defineProperty` for navigator; checked locally with Node 20 and Node 22. Expert now attempts one strategic relocation per outage and its recorded p50 differs from greedy. The previous harness accidentally ignored explicit swipe radii because `applyAction` did not forward them; it now does, with a regression assertion.
+- Malicious traffic has a square packet visual and is filtered using a shield visual; player-visible Persian copy was revised. This is a partial compliance pass, not an organizer certification.
+- Mobile tray shrink-to-fit avoids the clipping observed on 320–412px; larger faces, adjusted dome size, and an eight-position label placement attempt were added. Screenshots `tests/screenshots/v2-p0/` document the current state; label placement is best-effort, and the requested 62% phone-height map target has **not** been met. No full interaction, accessibility or performance certification has been performed.
+- `worker/src/handler.js`, `build.js`, `worker/dev.js`, `worker/dist/worker.js`: minimal local bootstrap serving HTML and ping only, smoke-tested via Request/Response. Other APIs fail closed. Runtime and deploy are **UNVERIFIED ON ARVAN**; `npx --yes r1ec --help` returned ENOVERSIONS here. The shared deterministic sim, replay security, storage adapter, leaderboard, campaign and other V2 features remain unimplemented. No leaderboard should be represented as validated or deployed.
+- No gameplay CONFIG was changed. `QUESTIONS_FOR_OWNER.md` records the outstanding platform, privacy and deployment questions.
+- Old V1 testing claims above are historical and several were not backed by sufficient tests. In particular, do not assume the formerly claimed full visual matrix, FPS, share fallback, attack-rerouting coverage, or real-device QA are verified. Current automated results are what `node tests/run_all.js` reports; the attack reroute test can skip when there is no online node.
