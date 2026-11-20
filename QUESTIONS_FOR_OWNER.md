@@ -1,14 +1,12 @@
-# Questions for the owner — Arvan production (UNVERIFIED ON ARVAN)
+# Owner-only unresolved decisions
 
-Please answer as one batch; development does not depend on an immediate answer.
+No secret is needed in chat. Please **change the password shared in chat** and revoke any exposed keys.
 
-1. Which Arvan Edge runtime and deployment flow is enabled on your account? Can you deploy a Workers-style `addEventListener('fetch', ...)` bundle, and what are the exact CLI/version and deployment configuration requirements?
-2. Is there a persistent, shared database/KV accessible from Edge isolates? What binding, authentication, atomic operations, consistency, TTL, latency and pricing apply? Is it shared across PoPs? An in-memory store is not a production leaderboard.
-3. What are the request body, response, bundle size, CPU time and memory limits, especially for replay validation? Are V8/JavaScriptCore versions specified?
-4. Is AlaaS enabled for your account? What are its endpoint, authentication/secret mechanism, model, quotas, content policies and timeout limits? Can the worker reach it privately?
-5. Which request headers are actually available, and which are trustworthy? No geolocation is required for teams; do not enable IP collection.
-6. What is the production HTTPS origin/custom domain and the expected lifetime through results day? Who will configure DNS, submit the contest entry and monitor availability?
-7. Does the contest permit random, locally generated pseudonymous identifiers and storing replay logs for 14 days under its no-personal-data rule? Please obtain organizer/legal confirmation before enabling public rankings.
-8. What operational budget and owner-managed secret/storage provisioning are available? Who will test on real Android and iOS devices and on Arvan staging?
+1. Can you confirm a cost ceiling for Edge and, separately, any AI/storage consumption before a paid resource is created? Will you supply an appropriately scoped machine-user credential through a secure channel only if this environment can use it without exposing it?
+2. Which new `cmiyc-` project name and production URL should be used, who will submit/monitor it, and who guarantees availability through results day?
+3. Please obtain contest-organizer/legal confirmation that random local pseudonymous IDs, scores and 14-day replay retention are allowed under the no-personal-data rule before enabling public rankings.
+4. If persistent rankings are approved, do you explicitly authorize provisioning an Object Storage bucket and scoped S3 credentials after cost/consistency review, or is another supported persistent store available to your account?
+5. Is an AI gateway already enabled, and do you authorize a model/budget for flavor text? Gateway usage is billed by tokens; no AI call has been made.
+6. Who can conduct staging tests on Arvan and real low-end Android and iOS devices, including availability and accessibility checks?
 
-Do not paste credentials into chat, files or the repository. No Arvan deployment or storage binding has been tested here.
+Platform implementation questions unresolved pending an authenticated private probe (not questions requiring secrets in chat): runtime capabilities/limits, timezone, env/secrets access, store consistency and network access. See PLATFORM_FINDINGS.md.

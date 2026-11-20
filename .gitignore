@@ -1,0 +1,13 @@
+# Never commit credentials or local Arvan CLI state.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+.arvan/
+.arvancli/
+.arvanconfig
+config.local.*
+node_modules/

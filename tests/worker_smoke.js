@@ -1,14 +1,20 @@
 'use strict';
 const assert=require('assert');
 const fs=require('fs');
-const {handleRequest}=require('../worker/dist/worker.js');
+const {handleRequest,dailyAt}=require('../worker/dist/worker.js');
 (async()=>{
  const page=await handleRequest(new Request('http://localhost/'));
  assert.equal(page.status,200);assert.equal(await page.text(),fs.readFileSync('index.html','utf8'));
  const ping=await handleRequest(new Request('http://localhost/api/ping'));
  const p=await ping.json();assert.equal(p.ok,true);assert(Number.isFinite(p.t));
+ const daily=await handleRequest(new Request('http://localhost/api/daily'));
+ assert.equal(daily.status,200);const d=await daily.json();assert(/^\d{8}$/.test(d.date));assert(Number.isInteger(d.seed));assert.equal(d.verificationAvailable,false);
+ assert.equal(dailyAt(new Date('2026-11-18T20:29:59Z')).date,'20261118');
+ assert.equal(dailyAt(new Date('2026-11-18T20:30:00Z')).date,'20261119');
+ const hash32=x=>{x|=0;x=Math.imul(x^(x>>>16),0x45d9f3b);x=Math.imul(x^(x>>>16),0x45d9f3b);return(x^(x>>>16))>>>0};
+ assert.equal(d.seed,hash32(Number(d.date)^0xC0FFEE));
  const unavailable=await handleRequest(new Request('http://localhost/api/score'));
  assert.equal(unavailable.status,503);
  const post=await handleRequest(new Request('http://localhost/api/score',{method:'POST'}));assert.equal(post.status,405);
- console.log('PASS worker GET /, GET /api/ping, fail-closed API, method rejection');
+ console.log('PASS worker /, ping, Tehran daily boundary and seed, fail-closed API, method rejection');
 })().catch(e=>{console.error(e);process.exitCode=1});

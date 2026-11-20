@@ -777,17 +777,18 @@ function updateHUD(){
  }
 }
 function showOverlay(id){document.querySelectorAll('.overlay').forEach(function(o){o.classList.remove('show')});if(id)$(id).classList.add('show')}
-function startRun(mode){
+function startRun(mode, dailySeed, dailyOnline){
  AudioSys.resume();
  var seed;
- if(mode==='daily'){seed=hash32(parseInt(tehranDate(),10)^0xC0FFEE)}
+ if(mode==='daily'){seed=Number.isInteger(dailySeed)?dailySeed:hash32(parseInt(tehranDate(),10)^0xC0FFEE)}
  else{var q=new URLSearchParams(location.search);var sq=q.get('seed');seed=sq!==null?parseInt(sq,10):Math.floor(Math.random()*1e9)}
  var _q=new URLSearchParams(location.search);var tut=!DB.tutorialSeen&&mode==='endless'&&_q.get('notut')!=='1';
  newRun(seed,mode,{tutorial:tut});
+ if(mode==='daily')S.dailyOnline=!!dailyOnline;
  particles=[];floaters=[];trail=[];selectedNode=null;trayEls=null;traySig='';
  $('hud').style.display='flex';showOverlay(null);resize();
  if(tut){$('tutSkip').style.display='block';tutShow(0)}else{$('tutSkip').style.display='none'}
- banner(mode==='daily'?'📅 چالش امروز!':'▶ بازی شروع شد!','good');
+ banner(mode==='daily'?(dailyOnline?'📅 سید لبه؛ ثبت امتیاز فعال نیست':'📅 آفلاین — ثبت نمی‌شه'):'▶ بازی شروع شد!','good');
 }
 function restartRun(){clearResume();if(S)startRun(S.mode)}
 let resumeIv=null,resuming=false;
@@ -812,7 +813,7 @@ function gameOverUI(){
  var f=S.finalStats;var r=rankFor(f.score);
  setText('overScore',toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')));
  setText('overRank',r[1]);setText('overFunny',r[2]);
- setText('overMode',S.mode==='daily'?('📅 چالش '+ (jalaliLabel()||'')):'حالت آزاد');
+ setText('overMode',S.mode==='daily'?('📅 چالش '+ (jalaliLabel()||'')+' — ثبت امتیاز فعال نیست'):'حالت آزاد');
  setText('stLat',toFa(f.ms));setText('stHit',toFa(f.hitPct)+'٪');setText('stCombo','×'+toFa(f.maxCombo));setText('stTime',fmtTime(f.sec));
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
@@ -938,7 +939,19 @@ function loopBody(ts){
 }
 /* ================= WIRING ================= */
 $('btnPlay').addEventListener('click',function(){startRun('endless')});
-$('btnDaily').addEventListener('click',function(){startRun('daily')});
+let dailyStarting=false;
+async function startDaily(){
+ if(dailyStarting)return;dailyStarting=true;
+ try {
+  if(location.protocol==='http:'||location.protocol==='https:'){
+   var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
+   var timer;
+   try{var res=await Promise.race([fetch('/api/daily',ctrl?{signal:ctrl.signal}:{}),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},1800)})]);if(!res.ok)throw Error('unavailable');var data=await res.json();if(!Number.isInteger(data.seed)||!/^\d{8}$/.test(data.date))throw Error('invalid');startRun('daily',data.seed,true);return}finally{clearTimeout(timer)}
+  }
+ }catch(e){}finally{dailyStarting=false}
+ startRun('daily');
+}
+$('btnDaily').addEventListener('click',startDaily);
 $('btnHow').addEventListener('click',function(){showOverlay('ovHow')});
 $('btnHowBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnHowGo').addEventListener('click',function(){showOverlay('ovMenu');startRun('endless')});

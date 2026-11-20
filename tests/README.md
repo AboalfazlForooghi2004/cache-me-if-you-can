@@ -32,3 +32,11 @@ python3 tests/visual_qa.py [outdir]     # default tests/screenshots
 Captures menu / play-with-wave / pause / game-over / how-to at 390×844, 360×740, 320×568,
 844×390, 1280×720, 1920×1080 plus the 1080×1350 share card, prints map metrics per viewport
 and any page errors. A representative subset of outputs is committed in `tests/screenshots/`.
+
+## V2 local worker checks
+
+`node build.js && node tests/run_all.js` also checks the generated worker's root, ping,
+preliminary Tehran daily date/seed (including a midnight boundary), disabled score API
+and method rejection. This is **not** a replay-verification or Arvan deployment test.
+`node tests/perf_local.js` prints a single local, scaled 10k-tick sim estimate; it is not
+an Arvan CPU limit measurement and may stop early at game-over.

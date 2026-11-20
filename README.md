@@ -1,4 +1,4 @@
-> **V2 work in progress — not ready for contest submission.** Only the P0 work and a local worker bootstrap described in `DECISIONS.md` have been started. There is no replay validation, persistent leaderboard, campaign or AI integration yet. Arvan deployment has not been tested. Prior V1 results and screenshots below are historical; they are not evidence that V2 requirements pass.
+> **V2 work in progress — not ready for contest submission.** Only the P0 work and a local worker bootstrap described in `DECISIONS.md` have been started. There is no replay validation, persistent leaderboard, campaign or AI integration yet. The preliminary same-origin daily seed endpoint reports `verificationAvailable:false`; daily scores are not submitted. Arvan deployment has not been tested. Prior V1 results and screenshots below are historical; they are not evidence that V2 requirements pass.
 
 # کَشَم کن اگه می‌تونی! — Cache Me If You Can
 
@@ -90,3 +90,15 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 ## مجوز
 
 کد، آرت و صوت original و پروسیجرال. فونت جاسازی‌شده: **Vazirmatn** Saber Rastegar — SIL Open Font License 1.1 (متن مجوز: `tests/Vazirmatn-OFL.txt`).
+
+
+## V2 status and compliance checklist (in progress)
+
+- Non-violent theme: partial reskin completed; full content review pending.
+- Politics / sexual / ethnic / religious / gender insults: full content review pending.
+- Ads and analytics: no advertising or analytics code is intentionally included; independent audit pending.
+- Personal data: no server-side identity collection currently implemented. The client stores local records; formal privacy review pending before any ranking features.
+- Free text: existing share fallback contains a read-only selectable textarea, not a player-submission field. Full interface audit pending.
+- Fake traffic / cheating: no traffic generation against an Arvan deployment was performed; replay validation is **not implemented**.
+- Assets: procedural game artwork and sound; bundled Vazirmatn font under OFL (see license); external rights/contest compliance review pending.
+- Platform: **UNVERIFIED ON ARVAN**. See `PLATFORM_FINDINGS.md`, `DEPLOY_LOG.md` and `DEPLOY_MANUAL.md`.
