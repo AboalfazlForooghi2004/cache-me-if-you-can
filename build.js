@@ -8,7 +8,7 @@ let privateConfig=null;
 if(wantPrivate){
  if(secretKeys.some(k=>!process.env[k])||Buffer.byteLength(process.env.WORKER_SECRET||'')<32||process.env.TRUSTED_PROXY_CONFIRMED!=='I_UNDERSTAND')throw Error('Invalid private configuration');
  let endpoint;try{endpoint=new URL(process.env.S3_ENDPOINT)}catch(e){throw Error('Invalid private configuration')}if(endpoint.protocol!=='https:'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash||endpoint.pathname!=='/')throw Error('Invalid private configuration');
- if(!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(process.env.S3_BUCKET)||!/^[A-Za-z0-9-]{1,64}$/.test(process.env.S3_REGION)||!/^[A-Za-z0-9_-]{1,128}$/.test(process.env.S3_ACCESS_KEY)||!/^[a-z0-9-]{1,64}$/.test(process.env.TRUSTED_CLIENT_IP_HEADER))throw Error('Invalid private configuration');
+ if(!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(process.env.S3_BUCKET)||!/^[A-Za-z0-9-]{1,64}$/.test(process.env.S3_REGION)||!/^[A-Za-z0-9_-]{1,128}$/.test(process.env.S3_ACCESS_KEY)||(!/^[a-z0-9-]{1,64}$/.test(process.env.TRUSTED_CLIENT_IP_HEADER)||['host','origin','referer','cookie','authorization','user-agent','x-forwarded-for','x-real-ip'].includes(process.env.TRUSTED_CLIENT_IP_HEADER)))throw Error('Invalid private configuration');
  privateConfig={secret:process.env.WORKER_SECRET,endpoint:process.env.S3_ENDPOINT,region:process.env.S3_REGION,bucket:process.env.S3_BUCKET,accessKey:process.env.S3_ACCESS_KEY,secretKey:process.env.S3_SECRET_KEY,identityHeader:process.env.TRUSTED_CLIENT_IP_HEADER};
 }
 const html=fs.readFileSync(path.join(root,'src/index.html'),'utf8'),handler=fs.readFileSync(path.join(root,'worker/src/handler.js'),'utf8');

@@ -14,3 +14,6 @@ node_modules/
 private/
 private_dist/
 output/
+
+# Temporary private-build test fixtures may contain dummy credentials.
+.private-build-test-*/

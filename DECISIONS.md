@@ -161,3 +161,6 @@ A quiet, procedural WebAudio background adjusts its tempo and notes for waves/lo
 
 ## Continuation — diagnostics and calibration
 Private diagnostics provide safe capability probes and a local fallback SHA/HMAC known-answer check without contacting storage or exposing credentials. Trust, S3 ordering and conditional writes remain unverified. Additional LITE tests exercise 122 ordinary/modifier bot runs; they do not establish fairness or prevent plausible fabricated results.
+
+## Continuation — private-build guardrails
+Reject obvious client-controlled and generic forwarded headers in build configuration and require an explicit proxy trust acknowledgement; this reduces common misconfiguration but does not establish that any remaining header is trustworthy. Tests check missing acknowledgement and an unsafe header fail without echoing credentials.
