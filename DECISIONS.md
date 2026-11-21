@@ -149,3 +149,6 @@ The standalone service mints HMAC-bound challenge links and a separate challenge
 
 ## Continuation — experimental private bundle
 Explicit, all-or-nothing `PRIVATE_BUILD=1` generates secret-bearing bundles exclusively in ignored `private_dist/` while retaining secret-free public artifacts. Private endpoint flow and diagnostics are tested against a mock S3 backend, not Arvan. An operator must configure and confirm a proxy-overwritten identity header: accepting a spoofable header compromises rate limits. Private bundles are staging-only pending target platform verification, lifecycle controls, moderation and client integration; LITE is heuristic, not replay verification.
+
+## Continuation — optional online browser flow
+Daily online submission requires explicit consent and a successful same-origin signed start; otherwise ordinary daily gameplay remains offline. The board shows unsupported errors instead of synthetic results. Challenge links use a signed start, preserve date/seed, and have separate score boards; challenge unavailability does not silently start an unrelated run. Chromium tests mock all server responses; no deployment or moderation guarantees are implied.

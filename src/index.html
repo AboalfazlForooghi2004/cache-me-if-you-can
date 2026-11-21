@@ -2,6 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#070B18">
 <meta name="description" content="کَشَم کن اگه می‌تونی — بازی آرکید-استراتژی تک‌فایلی مرورگری: ایران رو با نودهای لبه سریع کن، جلو DDoS رو بگیر و نذار درخواستی به سرور مبدأ برسه. ساخته‌شده برای #GameOnEdge آروان‌کلاد.">
@@ -144,9 +145,11 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="sub">ایران رو سریع کن! 🛕 نود بذار، گرمش کن، ترافیک مخرب رو فیلتر کن</div>
   <div class="bestchip" id="menuBest">🏆 بهترین رکورد: ۰</div>
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
+  <button class="btn" id="btnFriendChallenge" style="display:none">🔗 بازی چالش دوستانه</button><button class="btn ghost" id="btnFriendBoard" style="display:none">🏆 جدول چالش دوستانه</button>
   <button class="btn" id="btnCampaign">🗺 مسیر پنج‌مرحله‌ای</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
+  <button class="btn ghost" id="btnOnlineBoard">🌐 جدول آنلاین امروز</button>
   <button class="btn ghost" id="btnDailyBoard">📅 جدول شخصی امروز</button>
   <button class="btn ghost" id="btnLocalBoard">🏆 جدول شخصی</button>
   <button class="btn ghost" id="btnHow">❓ چطور بازی کنم؟</button>
@@ -158,7 +161,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 </div></div>
 
 <div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر پنج‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
-<div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="tip" id="dailyMissionsIntro"></div><div class="tip">این چالش روی دستگاه ذخیره می‌شود؛ ثبت جهانی فعال نیست.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
+<div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="sub" id="dailyStartMessage" role="status"></div><div class="tip" id="dailyMissionsIntro"></div><div class="tip">رکورد شخصی روی همین دستگاه ذخیره می‌شود. ثبت آنلاین اختیاری است و فقط در صورت پشتیبانی سرور کار می‌کند؛ بررسی آن تقریبی است، نه بازپخش.</div><label><input type="checkbox" id="onlineConsent"> ارسال نام مستعار و آمار بازی برای جدول آنلاین</label><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
+<div class="overlay" id="ovOnlineBoard"><div class="card"><h2 id="onlineBoardTitle">🌐 جدول آنلاین امروز</h2><div class="sub">در صورت اتصال؛ بررسی LITE تقریبی است و بازپخش را تأیید نمی‌کند.</div><div id="onlineBoardRows"></div><button class="btn primary" id="btnOnlineBack">برگرد</button></div></div>
 <div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="tip" id="dailyMissionResults"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
 <div class="overlay" id="ovLocalBoard"><div class="card">
   <h2>🏆 جدول شخصی</h2><div class="sub">فقط روی همین دستگاه ذخیره می‌شود؛ جدول سراسری نیست.</div>
@@ -194,7 +198,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="scorelabel">امتیاز</div>
   <div class="rankpill" id="overRank"></div>
   <div class="funny" id="overFunny"></div>
-  <div class="bestchip" id="overBest"></div>
+  <div class="bestchip" id="overBest"></div><div class="sub" id="onlineStatus" role="status"></div>
   <div class="stats">
     <div class="stat"><div class="v" id="stLat">۰</div><div class="k">میانگین تأخیر (ms)</div></div>
     <div class="stat"><div class="v" id="stHit">۰٪</div><div class="k">ضربه‌ی کَش</div></div>
@@ -202,6 +206,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
     <div class="stat"><div class="v" id="stTime">۰۰:۰۰</div><div class="k">مدت دوام</div></div>
   </div>
   <div class="tip" id="overTip"></div>
+  <button class="btn" id="btnChallengeLink" style="display:none">🔗 ساخت لینک چالش</button>
   <button class="btn primary" id="btnAgain">↻ دوباره</button>
   <div class="row"><button class="btn" id="btnShare">📤 اشتراک‌گذاری</button><button class="btn ghost" id="btnOverMenu">🏠 منو</button></div>
 </div></div>
@@ -875,9 +880,9 @@ function startRun(mode, dailySeed, dailyOnline, dailyDate, campaignLevel){
  particles=[];floaters=[];trail=[];selectedNode=null;trayEls=null;traySig='';
  $('hud').style.display='flex';showOverlay(null);resize();
  if(tut){$('tutSkip').style.display='block';tutShow(0)}else{$('tutSkip').style.display='none'}
- banner(mode==='daily'?'📅 '+S.modifier.name+' — جدول شخصی':mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name+' · '+toFa(CAMPAIGN[S.campaignLevel].seconds)+' ثانیه':'▶ بازی شروع شد!','good');
+ banner(mode==='daily'?'📅 '+S.modifier.name+(dailyOnline?' — آنلاین LITE':' — جدول شخصی'):mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name+' · '+toFa(CAMPAIGN[S.campaignLevel].seconds)+' ثانیه':'▶ بازی شروع شد!','good');
 }
-function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,S.dailyOnline,S.dailyDate,S.campaignLevel)}
+function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,false,S.dailyDate,S.campaignLevel)}
 let resumeIv=null,resuming=false;
 function clearResume(){if(resumeIv){clearInterval(resumeIv);resumeIv=null}resuming=false;try{$('countdown').style.display='none'}catch(e){}}
 function pauseGame(){if(!S||S.phase!=='play')return;clearResume();S.phase='pause';showOverlay('ovPause')}
@@ -902,16 +907,17 @@ function gameOverUI(){
  if(S.won&&S.mode==='campaign'){DB.campaignUnlocked=Math.min(5,Math.max(Number(DB.campaignUnlocked)||1,S.campaignLevel+2))}
  setText('overScore',toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')));
  setText('overRank',r[1]);setText('overFunny',r[2]);
- setText('overMode',S.mode==='daily'?('📅 چالش '+S.dailyDate+' · '+S.modifier.name+' — جدول شخصی'):S.mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name:'حالت آزاد');
+ setText('overMode',S.mode==='daily'?((S.challengeToken?'🔗 چالش دوستانه ':'📅 چالش ')+S.dailyDate+' · '+S.modifier.name):S.mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name:'حالت آزاد');
  setText('stLat',toFa(f.ms));setText('stHit',toFa(f.hitPct)+'٪');setText('stCombo','×'+toFa(f.maxCombo));setText('stTime',fmtTime(f.sec));
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
- DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode,date:S.dailyDate,name:displayNickname(DB.nickname)});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
- if(S.mode==='daily'){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true});if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
+ DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.challengeToken?'challenge':S.mode,date:S.dailyDate,name:displayNickname(DB.nickname)});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
+ if(S.mode==='daily'&&!S.challengeToken){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true});if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
- showOverlay('ovOver');
+ setText('onlineStatus',S.onlineTicket?'در حال ارسال امتیاز...':'امتیاز فقط محلی است.');$('btnChallengeLink').style.display=S.challengeMakerTicket?'block':'none';
+ showOverlay('ovOver');if(S.onlineTicket)submitOnline(S);
 }
 const TUT_MSGS=['روی تهران لمس کن، نود بذار 👆','نود تازه سرده 🥶 — با ترافیک گرم می‌شه','هر شهر می‌ره سراغ نزدیک‌ترین نود','ترافیک مخرب! با انگشت فیلترش کن ✋ به شهرها دست نزن!','می‌تونی نودها رو جابه‌جا کنی — ولی کَشش پاک می‌شه!'];
 function tutShow(i){var el=$('tut');el.textContent=TUT_MSGS[i];el.classList.add('show');S.tutCur=i;S.tutNext=i+1;S.tutShownAt=S.t;S.tutVisible=true}
@@ -1032,21 +1038,30 @@ function loopBody(ts){
 $('btnPlay').addEventListener('click',function(){startRun('endless')});
 $('btnCampaign').addEventListener('click',function(){var root=$('campaignChoices');root.textContent='';var unlocked=Math.max(1,Math.min(5,Number(DB.campaignUnlocked)||1));CAMPAIGN.forEach(function(level,i){var b=document.createElement('button');b.className='btn';b.disabled=i>=unlocked;b.textContent=(i>=unlocked?'🔒 ':'')+toFa(i+1)+' · '+level.name+' — '+toFa(level.seconds)+' ثانیه';b.addEventListener('click',function(){if(i<unlocked)startRun('campaign',null,false,null,i)});root.appendChild(b)});showOverlay('ovCampaign')});
 $('btnCampaignBack').addEventListener('click',function(){showOverlay('ovMenu')});
-let dailyStarting=false;
-async function startDaily(){
- if(dailyStarting)return;dailyStarting=true;
- try {
-  if(location.protocol==='http:'||location.protocol==='https:'){
-   var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
-   var timer;
-   try{var res=await Promise.race([fetch('/api/daily',ctrl?{signal:ctrl.signal}:{}),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},1800)})]);if(!res.ok)throw Error('unavailable');var data=await res.json();if(!Number.isInteger(data.seed)||!/^\d{8}$/.test(data.date))throw Error('invalid');if(data.date!==tehranDate()||data.seed!==hash32(parseInt(data.date,10)^0xC0FFEE))throw Error('date mismatch');startRun('daily',data.seed,true,data.date);return}finally{clearTimeout(timer)}
-  }
- }catch(e){}finally{dailyStarting=false}
- startRun('daily');
+async function requestWithTimeout(path,options,ms){var ctrl=typeof AbortController!=='undefined'?new AbortController():null,timer;options=options||{};if(ctrl)options.signal=ctrl.signal;try{return await Promise.race([fetch(path,options),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},ms)})])}finally{clearTimeout(timer)}}
+async function submitOnline(run){var f=run.finalStats,body={name:normalizeNickname(DB.nickname)||'',token:run.onlineTicket,run:{seed:run.seed,score:f.score,served:f.served,fastCount:f.fastCount,maxCombo:f.maxCombo,timeouts:f.timeouts,duration:f.sec}};run.onlineTicket=null;
+ try{var r=await requestWithTimeout('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},4000);var d=await r.json();if(S===run)setText('onlineStatus',r.ok&&d.ok&&d.validation==='LITE'?'ثبت آنلاین شد — بررسی تقریبی LITE، بدون بازپخش.':'ثبت آنلاین پذیرفته نشد؛ رکورد محلی محفوظ است.')}catch(e){if(S===run)setText('onlineStatus','پاسخ ثبت آنلاین نرسید؛ وضعیت ثبت نامشخص است. رکورد محلی محفوظ است.')}
 }
-$('btnDaily').addEventListener('click',function(){var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);setText('dailyMissionsIntro','ماموریت‌های شخصی امروز (هرکدام در یک بازی): '+missionsFor(tehranDate()).map(function(x){return x.name}).join(' · '));showOverlay('ovDailyIntro')});
+let dailyStarting=false,activeChallenge=null;
+var challengeParam=new URLSearchParams(location.search).get('challenge');if(challengeParam&&challengeParam.length<=1024&&/^[A-Za-z0-9_.-]+$/.test(challengeParam)){$('btnFriendChallenge').style.display='block';$('btnFriendBoard').style.display='block'}
+async function startDaily(){
+ if(dailyStarting)return;if(activeChallenge&&!$('onlineConsent').checked){setText('dailyStartMessage','برای شرکت در چالش آنلاین، اجازهٔ ارسال آمار لازم است.');return}dailyStarting=true;
+ try{
+  if(activeChallenge&&location.protocol!=='http:'&&location.protocol!=='https:')throw Error('offline');
+  if($('onlineConsent').checked&&(location.protocol==='http:'||location.protocol==='https:')){
+   var res=await requestWithTimeout('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(activeChallenge?{challenge:activeChallenge}:{})},1800);if(!res.ok)throw Error('unavailable');var data=await res.json();if(!data.ok||data.validation!=='LITE'||typeof data.token!=='string'||data.token.length>1024||!Number.isInteger(data.seed)||!/^\d{8}$/.test(data.date)||(!activeChallenge&&data.date!==tehranDate())||data.seed!==hash32(parseInt(data.date,10)^0xC0FFEE)||(activeChallenge&&!data.challenge))throw Error('invalid');startRun('daily',data.seed,true,data.date);S.onlineTicket=data.token;S.challengeMakerTicket=data.token;S.challengeToken=activeChallenge;return;
+  }
+ }catch(e){if(activeChallenge){setText('dailyStartMessage','چالش در دسترس نیست یا منقضی شده است.');return}}finally{dailyStarting=false}
+ startRun('daily',undefined,false);if($('onlineConsent').checked)banner('سرور در دسترس نیست؛ بازی محلی','warn');
+}
+$('btnDaily').addEventListener('click',function(){activeChallenge=null;setText('dailyStartMessage','');var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);setText('dailyMissionsIntro','ماموریت‌های شخصی امروز (هرکدام در یک بازی): '+missionsFor(tehranDate()).map(function(x){return x.name}).join(' · '));showOverlay('ovDailyIntro')});
+$('btnFriendChallenge').addEventListener('click',function(){activeChallenge=challengeParam;setText('dailyIntro','چالش دوستانه — تاریخ و قوانین پس از تأیید سرور مشخص می‌شود.');setText('dailyMissionsIntro','این بازی در جدول چالش جدا ثبت می‌شود.');setText('dailyStartMessage','');showOverlay('ovDailyIntro')});
 $('btnDailyStart').addEventListener('click',startDaily);
 $('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
+async function openOnlineBoard(challenge){setText('onlineBoardTitle',challenge?'🏆 جدول چالش دوستانه':'🌐 جدول آنلاین امروز');showOverlay('ovOnlineBoard');var rows=$('onlineBoardRows');rows.textContent='در حال دریافت...';try{if(location.protocol!=='http:'&&location.protocol!=='https:')throw Error('offline');var r=await requestWithTimeout('/api/leaderboard?'+(challenge?'challenge='+encodeURIComponent(challenge):'date='+encodeURIComponent(tehranDate())),{},3000);var data=await r.json();if(!r.ok||!data.ok||data.validation!=='LITE'||!Array.isArray(data.entries))throw Error('unavailable');rows.textContent='';var list=data.entries.slice(0,10);if(!list.length)rows.textContent='هنوز رکوردی نیست.';list.forEach(function(entry,i){var row=document.createElement('div');row.className='setrow';var score=Number.isSafeInteger(entry.score)&&entry.score>=0?entry.score:0;row.textContent=toFa(i+1)+' · '+displayNickname(entry.name)+' · '+toFa(score);rows.appendChild(row)})}catch(e){rows.textContent='جدول آنلاین در دسترس نیست؛ جدول شخصی جداگانه در منو موجود است.'}}
+$('btnOnlineBoard').addEventListener('click',function(){openOnlineBoard(null)});
+$('btnFriendBoard').addEventListener('click',function(){openOnlineBoard(challengeParam)});
+$('btnOnlineBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var completed=DB.daily[dd]&&DB.daily[dd].missions||{};setText('dailyMissionResults','آخرین رشتهٔ بازی: '+toFa(DB.dailyStreak&&DB.dailyStreak.count||0)+' روز'+(DB.dailyStreak&&DB.dailyStreak.date?' (تا '+toFa(DB.dailyStreak.date)+')':'')+' · '+missionsFor(dd).map(function(x){return (completed[x.id]?'✓ ':'○ ')+x.name}).join(' · '));var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
 $('btnDailyBoardBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnLocalBoard').addEventListener('click',function(){
@@ -1067,6 +1082,7 @@ $('btnRestart').addEventListener('click',function(){showOverlay(null);restartRun
 $('btnToMenu').addEventListener('click',toMenu);
 $('btnSecondChance').addEventListener('click',function(){if(useSecondChance()){showOverlay(null);banner('فرصت دوباره!','good')}});
 $('btnFinishRun').addEventListener('click',gameOverUI);
+$('btnChallengeLink').addEventListener('click',async function(){if(!S||!S.challengeMakerTicket)return;var run=S;setText('onlineStatus','در حال ساخت لینک...');try{var r=await requestWithTimeout('/api/challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:run.challengeMakerTicket})},4000);var d=await r.json();if(!r.ok||!d.ok||typeof d.url!=='string')throw Error('unavailable');var u=new URL(d.url,location.href);if(u.origin!==location.origin||u.pathname!=='/'||!u.searchParams.get('challenge'))throw Error('invalid');if(S===run){$('shareTa').value=u.href;showOverlay('ovShareText');setText('onlineStatus','لینک آماده است؛ مهلت آن محدود است.')}}catch(e){if(S===run)setText('onlineStatus','ساخت لینک در دسترس نیست یا فرصت آن تمام شده است.')}});
 $('btnAgain').addEventListener('click',restartRun);
 $('btnOverMenu').addEventListener('click',toMenu);
 $('btnShare').addEventListener('click',doShare);
