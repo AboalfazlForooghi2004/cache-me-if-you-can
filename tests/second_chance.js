@@ -1,0 +1,2 @@
+'use strict';const assert=require('assert'),G=require('./balance_harness').G;
+G.newRun(123,'endless',{tutorial:false});const s=G.state;s.nextArrival=999;s.sla=0;G.step(1/60);assert(s.over);assert(G.useSecondChance());assert(!s.over);assert.equal(s.sla,30);assert(s.secondChanceUsed);assert.equal(s.finalStats,null);assert(!G.useSecondChance());s.sla=0;G.step(1/60);assert(s.over);assert(!G.useSecondChance());console.log('PASS once-only second chance and final game over');

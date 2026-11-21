@@ -107,3 +107,6 @@ Added CONFIG `turbo:{threshold:12,duration:6,cooldown:20}`: automatic activation
 
 ## Continuation — non-seasonal daily modifiers
 The existing date seed hash also selects one of eight per-run modifier objects; no global CONFIG is mutated. Each is described on pre-run and personal daily board, named in menu and run banner, and applied entirely offline. Local date-specific top-10 is stored separately from the general board; it is not global. Retry preserves the run date. Daily modifier tests use 15 simulation seeds each and assert human >=60 s, expert/greedy >=150 s median. Old seasonal event was renamed to neutral `surge` with unchanged multipliers.
+
+## Continuation — once-only offline second chance
+CONFIG `secondChance:{sla:30}`. After first non-tutorial loss the player may finish or continue, once, at 30 SLA and zero combo; no reward or leaderboard record is saved until final game over. No ad or network dependency. Headless and Chromium tests cover one-use behavior. Tests and bot difficulty runs do not accept this offer automatically.

@@ -14,7 +14,7 @@
 - Stage 6 is **partial**: assets and limited screenshot QA only; not all requested screens exist.
 
 ## Cut / not implemented in this run
-- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; second chance; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
+- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
 - Campaign win rates and upgrade pick rates cannot be reported because those features do not exist.
 
 ## Platform and delivery
@@ -32,9 +32,13 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 ## Continuation — Turbo slice
 - Implemented deterministic automatic Turbo on combo ≥12: 6s active, then 20s cooldown. Active ticks maximize node warmth, double fast SLA gain and double the score multiplier (capped at 6×), with gold border and activation banner. Triggering request itself earns ordinary score; effect starts after it completes. `tests/turbo.js` exercises activation, warmth, duration/cooldown. `390x844-turbo.png` is a curated state capture, not a natural play-through.
 - Latest `node tests/run_all.js`: ALL TESTS PASS, including existing bands and 50-seed soak. Survival p10/p50/p90: lazy 32/42/50, novice 74/80/110, human 77/105/138, expert 193/313/600, greedy 158/342/600 seconds. Scores: lazy 642/936/1145, novice 9971/14392/24191, human 14485/23678/38433, expert 68289/110448/184636, greedy 52791/119312/184416. These are ordinary-mode results, not modifier/campaign results.
-- `CONFIG.turbo={threshold:12,duration:6,cooldown:20}`. Features earlier listed as missing remain missing except golden and Turbo; no upgrade choices, second chance, at that point; daily modifiers were added in the later slice below.
+- `CONFIG.turbo={threshold:12,duration:6,cooldown:20}`. Features earlier listed as missing remain missing except golden and Turbo; no upgrade choices or second chance at that point, at that point; daily modifiers were added in the later slice below.
 
 ## Continuation — Tehran daily modifiers
 - Eight non-seasonal named modifiers are chosen by the Tehran date hash and apply deterministic per-run effects (traffic, patience, warmth, edge speed, damage, recovery, points). Name and description appear in pre-run and personal daily board; the name also appears on the menu and at run start. Daily board is separately stored per date, only on the device. Seed/date are preserved when retrying, including across midnight. The same-origin seed endpoint is accepted only if date and hash match the locally selected Tehran date; offline mode remains playable. Historical generic event was renamed from seasonal copy to a neutral traffic surge.
 - `tests/daily_modifiers.js` covers all eight modifiers with 15 seeds each and requires human median >=60 s, expert/greedy >=150 s. Sample dates and medians human/expert/greedy: rush 107/203/232, warm 107/358/313, patient 109/358/313, resilient 109/358/313, steady 109/501/527, efficient 108/513/514, recovery 109/358/313, reward 108/358/313 seconds. These are simulations, not human/device measurements.
 - `tests/visual_stage.py` passed seven viewports; 390x844 daily intro and local board were additionally checked in Chromium. User-scrollable menu card on the shortest screen still needs layout polish. No Arvan deployment tested.
+
+## Continuation — second chance
+- A once-per-run, opt-in second chance now appears on first game over (except tutorial): continue with 30 SLA and reset combo, or finish normally. It is free and works offline; no intermediate score is persisted before the decision. Test `tests/second_chance.js` verifies the simulation's once-only state transition; `tests/visual_v2.py` exercises both UI and final game over in Chromium. Screenshots include `390x844-second-chance.png` and daily screens. Bot balance tables above deliberately use the original policy with no second-chance acceptance and so are conservative, not player-session predictions.
+- Second chance is no longer a missing item. Upgrade picks, campaign, secure names and online features remain missing. `node tests/run_all.js` passes. Latest authenticated remote push remains at `9fc6cd6`; a new unauthenticated push failed because this environment does not expose `GITHUB_TOKEN`, so subsequent local commits need pushing or manual bundle transfer.

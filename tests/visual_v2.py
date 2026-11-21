@@ -1,0 +1,13 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+root=Path(__file__).resolve().parent.parent
+url=(root/'index.html').as_uri()+'?daily=20261101&notut=1'
+out=root/'tests/screenshots/stage-current'
+with sync_playwright() as p:
+ b=p.chromium.launch();pg=b.new_page(viewport={'width':390,'height':844});errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
+ pg.goto(url);pg.wait_for_timeout(1300)
+ pg.click('#btnDaily');assert 'رفت‌وآمد سریع' in pg.locator('#dailyIntro').inner_text();pg.screenshot(path=str(out/'390x844-daily-intro.png'))
+ pg.click('#btnDailyBack');pg.click('#btnDailyBoard');assert 'رفت‌وآمد سریع' in pg.locator('#dailyBoardInfo').inner_text();pg.screenshot(path=str(out/'390x844-daily-board.png'))
+ pg.click('#btnDailyBoardBack');pg.click('#btnDaily');pg.click('#btnDailyStart');pg.wait_for_timeout(100);assert pg.evaluate("window.__game.state.mode==='daily'&&window.__game.state.modifier.id==='rush'")
+ pg.evaluate('window.__game.state.sla=0');pg.wait_for_selector('#ovSecondChance.show');pg.screenshot(path=str(out/'390x844-second-chance.png'));pg.click('#btnSecondChance');assert pg.evaluate('window.__game.state.secondChanceUsed&&!window.__game.state.over');pg.evaluate('window.__game.state.sla=0');pg.wait_for_selector('#ovOver.show');assert not errors,errors
+ print('PASS daily intro/board/offline start and once-only second-chance UI');b.close()
