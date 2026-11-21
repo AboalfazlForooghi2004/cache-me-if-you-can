@@ -463,14 +463,14 @@ function leakBot(b){
  emit('botLeaked',{x:b.x,y:b.y});
 }
 function applySwipe(x1,y1,x2,y2,killR,friendR){
- var kr=killR!=null?killR:CONFIG.bots.killRadiusPx/mapScale;
- var fr=friendR!=null?friendR:CONFIG.bots.friendlyRadiusPx/mapScale;
- var kills=0;
- for(var i=0;i<S.bots.length;i++){var b=S.bots[i];if(!b.alive)continue;if(segDist(b.x,b.y,x1,y1,x2,y2)<=kr){killBot(b);kills++}}
+ var kr=killR!=null?killR:CONFIG.bots.killRadiusPx;
+ var fr=friendR!=null?friendR:CONFIG.bots.friendlyRadiusPx;
+ var p1=w2s(x1,y1),p2=w2s(x2,y2),kills=0;
+ for(var i=0;i<S.bots.length;i++){var b=S.bots[i];if(!b.alive)continue;var bp=killR==null?w2s(b.x,b.y):b;var kd=killR==null?segDist(bp.x,bp.y,p1.x,p1.y,p2.x,p2.y):segDist(bp.x,bp.y,x1,y1,x2,y2);if(kd<=kr){killBot(b);kills++}}
  var waveActive=S.activeWave&&(S.t>=S.activeWave.startT);
  if(waveActive){
   for(var j=0;j<S.cities.length;j++){var c=S.cities[j];var cd=S.friendlyCd[j]||0;if(S.t<cd)continue;
-   if(segDist(c.x,c.y,x1,y1,x2,y2)<=fr){S.sla+=CONFIG.sla.friendlyFire;S.combo=0;S.friendlyCd[j]=S.t+CONFIG.bots.friendlyCooldown;emit('friendlyFire',{city:j});break}}
+   var cp=friendR==null?w2s(c.x,c.y):c;var fd=friendR==null?segDist(cp.x,cp.y,p1.x,p1.y,p2.x,p2.y):segDist(cp.x,cp.y,x1,y1,x2,y2);if(fd<=fr){S.sla+=CONFIG.sla.friendlyFire;S.combo=0;S.friendlyCd[j]=S.t+CONFIG.bots.friendlyCooldown;emit('friendlyFire',{city:j});break}}
  }
  return kills;
 }
@@ -589,7 +589,7 @@ function vibrate(ms){if(DB.settings.haptics&&navigator.vibrate){try{navigator.vi
 function reducedMotion(){if(DB.settings.reducedMotion!==null)return DB.settings.reducedMotion;try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 /* ================= RENDER ================= */
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-let DPR=1,VW=0,VH=0,playRect={x:0,y:0,w:0,h:0},mapScale=1,mapOX=0,mapOY=0;
+let DPR=1,VW=0,VH=0,playRect={x:0,y:0,w:0,h:0},mapScale=1,mapScaleY=1,mapOX=0,mapOY=0;
 let EMPTYQ=[];let bgCanvas=null,mapCanvas=null,particles=[],floaters=[],trail=[],shakeT=0,flashT=0,vigT=0,heartT=0;
 let lastTopH=0,lastBotH=0;
 function oh(el){return (el&&typeof el.offsetHeight==='number'&&el.offsetHeight>0)?el.offsetHeight:0}
@@ -610,12 +610,17 @@ function resize(){
  if(compact){playRect={x:8,y:8,w:VW-16,h:VH-16};setHudVars(topH,52)}
  else if(wide){botH=0;playRect={x:8,y:topH,w:Math.max(220,VW-(sideW||180)-16),h:Math.max(160,VH-topH-8)};setHudVars(topH,16)}
  else{botH=botH||lastBotH||110;playRect={x:8,y:topH,w:VW-16,h:Math.max(140,VH-topH-botH-8)};setHudVars(topH,botH)}
- mapScale=Math.min((playRect.w-24)/1000,(playRect.h-24)/892);
- mapOX=playRect.x+(playRect.w-1000*mapScale)/2;mapOY=playRect.y+(playRect.h-892*mapScale)/2;
+ mapScale=Math.min((playRect.w-24)/1000,(playRect.h-24)/892);mapScaleY=mapScale;
+ if(!landscape&&VH>VW*1.3){
+  mapScale=Math.min((playRect.w-4)/1000,(playRect.h-24)/892);
+  var minY=Infinity,maxY=-Infinity;for(var oi=0;oi<OUTLINE.length;oi++){minY=Math.min(minY,OUTLINE[oi].y);maxY=Math.max(maxY,OUTLINE[oi].y)}
+  mapScaleY=Math.min((playRect.h-24)/892,Math.max(mapScale,VH*0.62/(maxY-minY)));
+ }
+ mapOX=playRect.x+(playRect.w-1000*mapScale)/2;mapOY=playRect.y+(playRect.h-892*mapScaleY)/2;
  buildStatic();
 }
-function w2s(x,y){return{x:mapOX+x*mapScale,y:mapOY+y*mapScale}}
-function s2w(x,y){return{x:(x-mapOX)/mapScale,y:(y-mapOY)/mapScale}}
+function w2s(x,y){return{x:mapOX+x*mapScale,y:mapOY+y*mapScaleY}}
+function s2w(x,y){return{x:(x-mapOX)/mapScale,y:(y-mapOY)/mapScaleY}}
 function buildStatic(){
  bgCanvas=document.createElement('canvas');bgCanvas.width=Math.floor(VW*DPR);bgCanvas.height=Math.floor(VH*DPR);
  var b=bgCanvas.getContext('2d');b.setTransform(DPR,0,0,DPR,0,0);
@@ -626,7 +631,7 @@ function buildStatic(){
  var m=mapCanvas.getContext('2d');m.setTransform(DPR,0,0,DPR,0,0);
  m.beginPath();for(var i=0;i<OUTLINE.length;i++){var p=w2s(OUTLINE[i].x,OUTLINE[i].y);if(i===0)m.moveTo(p.x,p.y);else m.lineTo(p.x,p.y)}m.closePath();
  m.fillStyle='#121B35';m.fill();m.strokeStyle='#2A3A6B';m.lineWidth=2;m.shadowColor='rgba(45,212,191,0.5)';m.shadowBlur=12;m.stroke();m.shadowBlur=0;
- m.fillStyle='rgba(138,151,194,0.08)';for(var gx=mapOX;gx<mapOX+1000*mapScale;gx+=18)for(var gy=mapOY;gy<mapOY+892*mapScale;gy+=18)m.fillRect(gx,gy,1.5,1.5);
+ m.fillStyle='rgba(138,151,194,0.08)';for(var gx=mapOX;gx<mapOX+1000*mapScale;gx+=18)for(var gy=mapOY;gy<mapOY+892*mapScaleY;gy+=18)m.fillRect(gx,gy,1.5,1.5);
  m.fillStyle='rgba(138,151,194,0.55)';m.font='11px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';m.direction='rtl';m.textAlign='center';
  var c1=w2s(500,60);m.fillText('دریای خزر',c1.x,c1.y);
  var c2=w2s(430,760);m.fillText('خلیج فارس',c2.x,c2.y);
@@ -692,11 +697,11 @@ function renderInner(tNow){
   ctx.beginPath();ctx.arc(px,py,2.5,0,6.29);ctx.fillStyle=(r.route==='hit')?'#2DD4BF':'#FFFFFF';ctx.fill();
  }
  var pendByCity=[];for(var rq=0;rq<S.requests.length;rq++){var rqv=S.requests[rq];if(!pendByCity[rqv.city])pendByCity[rqv.city]=[];pendByCity[rqv.city].push(rqv)}
- var labelBoxes=[];for(var ni0=0;ni0<S.nodes.length;ni0++){var pp=w2s(S.cities[S.nodes[ni0].cityIdx].x,S.cities[S.nodes[ni0].cityIdx].y);labelBoxes.push({l:pp.x-21,r:pp.x+21,t:pp.y-40,b:pp.y+3})}
+ var labelBoxes=[{l:portal.x-20,r:portal.x+20,t:portal.y-28,b:portal.y+58}];for(var ci0=0;ci0<S.cities.length;ci0++){var cs=w2s(S.cities[ci0].x,S.cities[ci0].y),pad=pendByCity[ci0]&&pendByCity[ci0].length?26:8;labelBoxes.push({l:cs.x-pad,r:cs.x+pad,t:cs.y-pad,b:cs.y+pad})}for(var ni0=0;ni0<S.nodes.length;ni0++){var pp=w2s(S.cities[S.nodes[ni0].cityIdx].x,S.cities[S.nodes[ni0].cityIdx].y);labelBoxes.push({l:pp.x-21,r:pp.x+21,t:pp.y-40,b:pp.y+3})}
  for(var ci=0;ci<S.cities.length;ci++){var cc2=S.cities[ci];var sp=w2s(cc2.x,cc2.y);
   ctx.beginPath();ctx.arc(sp.x,sp.y,6,0,6.29);ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fill();ctx.strokeStyle='#2A3A6B';ctx.lineWidth=1.5;ctx.stroke();
   ctx.fillStyle='#E8EEFF';ctx.font='11px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';ctx.textAlign='center';ctx.direction='rtl';
-  var label=CITIES[ci].fa, mt=ctx.measureText(label), tw=(mt&&mt.width)||30, candidates=[[0,23],[0,-19],[32,4],[-32,4],[30,22],[-30,22],[30,-17],[-30,-17]], lx=sp.x,ly=sp.y+23;
+  var label=CITIES[ci].fa, mt=ctx.measureText(label), tw=(mt&&mt.width)||30, candidates=[[0,23],[0,-19],[32,4],[-32,4],[30,22],[-30,22],[30,-17],[-30,-17],[0,39],[0,-35],[46,0],[-46,0],[44,30],[-44,30],[44,-28],[-44,-28],[0,53],[0,-49]], lx=sp.x,ly=sp.y+23;
   for(var li2=0;li2<candidates.length;li2++){var xx=sp.x+candidates[li2][0],yy=sp.y+candidates[li2][1];var box={l:xx-tw/2-2,r:xx+tw/2+2,t:yy-11,b:yy+3},ok=box.l>=2&&box.r<=VW-2&&box.t>=playRect.y&&box.b<=VH-2;
    for(var lb=0;ok&&lb<labelBoxes.length;lb++){var ob=labelBoxes[lb];if(box.l<ob.r&&box.r>ob.l&&box.t<ob.b&&box.b>ob.t)ok=false}
    if(ok){lx=xx;ly=yy;break}
@@ -1097,7 +1102,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname,missionsFor:missionsFor,advanceStreak:advanceStreak,missionMet:missionMet};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get mapScaleY(){return mapScaleY},get mapBounds(){var xs=OUTLINE.map(function(p){return w2s(p.x,p.y).x}),ys=OUTLINE.map(function(p){return w2s(p.x,p.y).y});return {x:Math.min.apply(null,xs),y:Math.min.apply(null,ys),width:Math.max.apply(null,xs)-Math.min.apply(null,xs),height:Math.max.apply(null,ys)-Math.min.apply(null,ys)}},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname,missionsFor:missionsFor,advanceStreak:advanceStreak,missionMet:missionMet};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

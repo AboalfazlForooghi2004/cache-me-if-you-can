@@ -1,0 +1,3 @@
+'use strict';const assert=require('assert'),{G}=require('./balance_harness');G.newRun(10,'endless',{tutorial:false});const s=G.state;assert(G.mapScaleY>G.mapScale,'portrait must be stretched');const w={x:500,y:400},p=G.w2s(w.x,w.y),round=G.s2w(p.x,p.y);assert(Math.abs(round.x-w.x)<1e-8&&Math.abs(round.y-w.y)<1e-8);
+function swipe(offset,id){let bot={id,x:w.x,y:w.y,targetNodeId:0,speed:0,alive:true,rot:0};s.bots.push(bot);const a=G.s2w(p.x-40,p.y+offset),b=G.s2w(p.x+40,p.y+offset);G.applySwipe(a.x,a.y,b.x,b.y);return bot.alive}
+assert(!swipe(23,11));assert(swipe(25,12));console.log('PASS portrait inverse transform and physical-pixel swipe radius despite anisotropic scaling');

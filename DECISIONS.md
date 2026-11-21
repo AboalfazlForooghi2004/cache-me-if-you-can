@@ -152,3 +152,6 @@ Explicit, all-or-nothing `PRIVATE_BUILD=1` generates secret-bearing bundles excl
 
 ## Continuation — optional online browser flow
 Daily online submission requires explicit consent and a successful same-origin signed start; otherwise ordinary daily gameplay remains offline. The board shows unsupported errors instead of synthetic results. Challenge links use a signed start, preserve date/seed, and have separate score boards; challenge unavailability does not silently start an unrelated run. Chromium tests mock all server responses; no deployment or moderation guarantees are implied.
+
+## Continuation — tall portrait map
+The target 390×844 outline footprint (at least 90% width and 62% height) requires nonuniform vertical scaling within this portrait viewport; screenshot and geometry assertion record the deliberate stylized distortion. Pointer swipe hit tests use screen-pixel distance, preserving the intended physical radius; explicit simulated radii remain world-space. Labels avoid known city/face/node/portal boxes when possible, but no guarantee is made for crowded frames.
