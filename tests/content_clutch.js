@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('fs'),assert=require('assert');
+const html=fs.readFileSync('index.html','utf8');
+assert(!/(نابود|بزن|بکش|💥)/u.test(html),'violent copy detected');
+const G=require('./balance_harness.js').G;
+G.newRun(41,'endless',{tutorial:false}); const S=G.state;
+S.t=8.90;S.sla=50;S.combo=5;S.nextArrival=999;S.timeline.evI=S.timeline.events.length;S.timeline.waveI=S.timeline.waves.length;
+S.requests.push({id:999,city:0,spawnT:0,patience:10,heavy:false,nodeId:null,route:'origin',phases:[],assignT:0,doneAt:8.91,totalDur:8.91,done:false,released:false,cost:1,originCounted:false});
+G.step(1/60);
+const e=S.events.find(x=>x.type==='requestServed'&&x.clutch);
+assert(e,'clutch event absent');assert.equal(S.sla,51);assert.equal(S.combo,5);
+const remainder=(10-S.t)/10;const mult=1.25;
+assert.equal(e.pts,Math.round(10*(0.5+remainder)*mult*2));
+console.log('PASS non-violent copy and deterministic clutch score/SLA/combo');

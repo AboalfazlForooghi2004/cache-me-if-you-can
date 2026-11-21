@@ -5,6 +5,7 @@ const {handleRequest,dailyAt}=require('../worker/dist/worker.js');
 (async()=>{
  const page=await handleRequest(new Request('http://localhost/'));
  assert.equal(page.status,200);assert.equal(await page.text(),fs.readFileSync('index.html','utf8'));
+ const og=await handleRequest(new Request('http://localhost/og.png'));assert.equal(og.status,200);assert.equal(og.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await og.arrayBuffer()),fs.readFileSync('assets/og_1200x630.png'));
  const ping=await handleRequest(new Request('http://localhost/api/ping'));
  const p=await ping.json();assert.equal(p.ok,true);assert(Number.isFinite(p.t));
  const daily=await handleRequest(new Request('http://localhost/api/daily'));

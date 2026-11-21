@@ -111,3 +111,11 @@ and `output/` copies. Shared simulation extraction, replay validation and privat
 builds are **not implemented**. The build refuses secret/storage environment variables.
 `/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
 replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.
+
+## Shipping override — partial progress
+
+`STATUS.md` is the authoritative implementation and cut list. A **local-only** top-10
+screen and clutch-save scoring were added. This is not a validated-score or global-board
+release. The store and validation modes remain `NONE`, and secret builds fail closed.
+The thumbnail and OG asset are in `assets/`; no claim is made that the missing V2
+features or contest compliance have passed QA.

@@ -146,6 +146,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
+  <button class="btn ghost" id="btnLocalBoard">🏆 جدول شخصی</button>
   <button class="btn ghost" id="btnHow">❓ چطور بازی کنم؟</button>
   <div class="menurow">
     <button class="iconbtn" id="btnSound" aria-label="sound">🔊</button>
@@ -154,6 +155,11 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="footer">ساخته‌شده برای مسابقه بازی‌سازی آروان‌کلاد · <span dir="ltr">#GameOnEdge</span></div>
 </div></div>
 
+<div class="overlay" id="ovLocalBoard"><div class="card">
+  <h2>🏆 جدول شخصی</h2><div class="sub">فقط روی همین دستگاه ذخیره می‌شود؛ جدول سراسری نیست.</div>
+  <div id="localBoardRows"></div>
+  <button class="btn primary" id="btnLocalBack">برگرد</button>
+</div></div>
 <div class="overlay" id="ovHow"><div class="card">
   <h2>چطور بازی کنم؟</h2>
   <div class="howcards">
@@ -443,15 +449,17 @@ function stepSim(dt){
    var mult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    var ymul=(S.activeEvent&&S.activeEvent.type==='yalda')?CONFIG.events.yalda.scoreMul:1;
    var damp=S.t<CONFIG.score.lateDampFrom?1:Math.max(CONFIG.score.lateDampMin,1-(S.t-CONFIG.score.lateDampFrom)*CONFIG.score.lateDampPerSec);
-   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*mult*ymul*damp);
+   var clutch=remFrac<0.12;
+   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*mult*ymul*damp*(clutch?2:1));
    var fast=elapsed<=CONFIG.fastSec;
    var oldMult=mult;
-   if(fast){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain);S.fastCount++}
+   if(clutch)S.sla=Math.min(100,S.sla+1);
+   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain);S.fastCount++}
    var newMult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    S.score+=pts;S.served++;S.latencySum+=elapsed;
    if(r.route==='hit'){S.hits++;var hn=nodeById(r.nodeId);if(hn)hn.hitsServed++}else if(r.route==='miss')S.misses++;else S.originServes++;
    S.latHist.push(Math.round(elapsed*CONFIG.msPerSecond));if(S.latHist.length>60)S.latHist.shift();
-   emit('requestServed',{ms:Math.round(elapsed*CONFIG.msPerSecond),pts:pts,city:r.city,fast:fast,route:r.route});
+   emit('requestServed',{ms:Math.round(elapsed*CONFIG.msPerSecond),pts:pts,city:r.city,fast:fast,clutch:clutch,route:r.route});
    if(newMult>oldMult)emit('comboUp',{n:S.combo,mult:newMult});
   }else if(S.t-r.spawnT>=r.patience){
    r.done=true;releaseReq(r);S.sla+=CONFIG.sla.timeout;S.combo=0;S.timeouts++;emit('requestTimeout',{city:r.city});
@@ -635,7 +643,7 @@ function renderInner(tNow){
  for(var fi2=floaters.length-1;fi2>=0;fi2--){var fl=floaters[fi2];fl.life-=0.016;fl.y-=0.6;if(fl.life<=0){floaters.splice(fi2,1);continue}ctx.globalAlpha=clamp(fl.life,0,1);ctx.fillStyle=fl.col;ctx.font='900 15px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';ctx.textAlign='center';ctx.direction='rtl';ctx.fillText(fl.txt,fl.x,fl.y);ctx.globalAlpha=1}
  ctx.restore();
  if(vigT>0){var vg=ctx.createRadialGradient(VW/2,VH/2,VH*0.3,VW/2,VH/2,VH*0.75);vg.addColorStop(0,'rgba(255,92,108,0)');vg.addColorStop(1,'rgba(255,92,108,'+(0.35*vigT)+')');ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH);vigT-=0.016}
- if(S&&S.sla<CONFIG.sla.lowThreshold&&S.phase==='play'){var vg2=ctx.createRadialGradient(VW/2,VH/2,VH*0.35,VW/2,VH/2,VH*0.8);vg2.addColorStop(0,'rgba(255,92,108,0)');vg2.addColorStop(1,'rgba(255,92,108,0.18)');ctx.fillStyle=vg2;ctx.fillRect(0,0,VW,VH)}
+ if(S&&S.sla<40&&S.phase==='play'){var vg2=ctx.createRadialGradient(VW/2,VH/2,VH*0.35,VW/2,VH/2,VH*0.8);vg2.addColorStop(0,'rgba(255,92,108,0)');vg2.addColorStop(1,'rgba(255,92,108,'+(reducedMotion()?0.12:0.12+0.06*(1+Math.sin(tNow*3))/2)+')');ctx.fillStyle=vg2;ctx.fillRect(0,0,VW,VH)}
  if(flashT>0){ctx.fillStyle='rgba(255,255,255,'+(flashT*0.7)+')';ctx.fillRect(0,0,VW,VH);flashT-=0.016}
  if(shakeT>0)shakeT-=0.016;
 }
@@ -818,7 +826,7 @@ function gameOverUI(){
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
- DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,5);
+ DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
  if(S.mode==='daily'){var dd=tehranDate();if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
@@ -845,7 +853,7 @@ function handleEvents(){
  if(!S)return;
  for(var i=0;i<S.events.length;i++){var ev=S.events[i];
   if(ev.type==='nodePlaced'){/* tutorial advances in tutTick */}
-  else if(ev.type==='requestServed'){var sp=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp.x,sp.y-20,'+'+toFa(ev.pts),ev.fast?'#7CF5D8':'#FFA94D');if(ev.fast){burst(sp.x,sp.y,'#2DD4BF',4);AudioSys.hit(S.combo);if(S.combo%5===0)vibrate(8)}else AudioSys.tick()}
+  else if(ev.type==='requestServed'){var sp=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp.x,sp.y-20,ev.clutch?'نجات! +'+toFa(ev.pts):'+'+toFa(ev.pts),ev.clutch?'#F5C451':ev.fast?'#7CF5D8':'#FFA94D');if(ev.clutch)AudioSys.tone(740,1100,0.16,'sine',0.12);if(ev.fast){burst(sp.x,sp.y,'#2DD4BF',4);AudioSys.hit(S.combo);if(S.combo%5===0)vibrate(8)}else AudioSys.tick()}
   else if(ev.type==='requestTimeout'){var sp2=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp2.x,sp2.y-20,'!','#FF5C6C');burst(sp2.x,sp2.y,'#FF5C6C',8);AudioSys.timeout();vibrate(30)}
   else if(ev.type==='comboUp'){banner('🔥 کمبو ×'+toFa(ev.mult.toFixed(1)),'gold');AudioSys.comboUp(S.combo);vibrate(20)}
   else if(ev.type==='botKilled'){var bp=w2s(ev.x,ev.y);shieldBurst(bp.x,bp.y);floater(bp.x,bp.y,'+'+toFa(CONFIG.score.botKill),'#FF5C6C');AudioSys.zap();vibrate(8)}
@@ -952,6 +960,15 @@ async function startDaily(){
  startRun('daily');
 }
 $('btnDaily').addEventListener('click',startDaily);
+$('btnLocalBoard').addEventListener('click',function(){
+ var rows=$('localBoardRows');rows.textContent='';var list=(Array.isArray(DB.top)?DB.top:[]).slice(0,10);
+ if(!list.length){rows.textContent='هنوز رکوردی ثبت نشده.'}
+ list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';
+ var rank=document.createElement('span');rank.textContent=toFa(i+1)+' · '+rankFor(Number(r.score)||0)[1];
+ var value=document.createElement('span');value.textContent=toFa(Number(r.score)||0);row.appendChild(rank);row.appendChild(value);rows.appendChild(row)});
+ showOverlay('ovLocalBoard');
+});
+$('btnLocalBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnHow').addEventListener('click',function(){showOverlay('ovHow')});
 $('btnHowBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnHowGo').addEventListener('click',function(){showOverlay('ovMenu');startRun('endless')});
