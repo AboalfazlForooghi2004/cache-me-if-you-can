@@ -158,8 +158,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 </div></div>
 
 <div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر پنج‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
-<div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="tip">این چالش روی دستگاه ذخیره می‌شود؛ ثبت جهانی فعال نیست.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
-<div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
+<div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="tip" id="dailyMissionsIntro"></div><div class="tip">این چالش روی دستگاه ذخیره می‌شود؛ ثبت جهانی فعال نیست.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
+<div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="tip" id="dailyMissionResults"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
 <div class="overlay" id="ovLocalBoard"><div class="card">
   <h2>🏆 جدول شخصی</h2><div class="sub">فقط روی همین دستگاه ذخیره می‌شود؛ جدول سراسری نیست.</div>
   <div id="localBoardRows"></div>
@@ -298,6 +298,18 @@ const DAILY_MODIFIERS=[
  {id:'reward',name:'پاداش مسیر',desc:'امتیاز پاسخ‌ها بیشتر است',score:1.1}
 ];
 function dailyModifier(date){return DAILY_MODIFIERS[hash32(Number(date)^0xC0FFEE)%DAILY_MODIFIERS.length]}
+const DAILY_MISSIONS=[
+ {id:'served',name:'۳۰ درخواست پاسخ بده',target:30},
+ {id:'fast',name:'۱۰ پاسخ سریع داشته باش',target:10},
+ {id:'combo',name:'کمبوی ۱۲ بساز',target:12},
+ {id:'survive',name:'۶۰ ثانیه دوام بیار',target:60},
+ {id:'score',name:'۵۰۰۰ امتیاز بگیر',target:5000}
+];
+function missionsFor(date){var offset=hash32(Number(date)^0x6D15510)%DAILY_MISSIONS.length;return [0,1,2].map(function(i){return DAILY_MISSIONS[(offset+i)%DAILY_MISSIONS.length]})}
+function dateOrdinal(date){if(!/^\d{8}$/.test(date))return null;var y=+date.slice(0,4),m=+date.slice(4,6),d=+date.slice(6,8),t=Date.UTC(y,m-1,d),v=new Date(t);return v.getUTCFullYear()===y&&v.getUTCMonth()===m-1&&v.getUTCDate()===d?Math.floor(t/86400000):null}
+function advanceStreak(previous,date){var n=dateOrdinal(date),old=previous&&dateOrdinal(previous.date);if(n===null)return previous||{date:'',count:0};if(old!==null&&n<=old)return previous;return {date:date,count:old!==null&&n===old+1?(Number(previous.count)||0)+1:1}}
+function missionMet(m,f){var value=m.id==='served'?f.served:m.id==='fast'?f.fastCount:m.id==='combo'?f.maxCombo:m.id==='survive'?f.sec:f.score;return Number(value)>=m.target}
+
 const CAMPAIGN=[
  {name:'شروع شبکه',seconds:45,spawn:0.85},
  {name:'شهرهای بیشتر',seconds:60,spawn:0.9},
@@ -531,8 +543,8 @@ function stepSim(dt){
  }
  S.sla=clamp(S.sla,0,100);
  if(S.tutorial&&S.t<CONFIG.tutorial.slaFloorUntil)S.sla=Math.max(S.sla,CONFIG.tutorial.slaFloor);
- if(S.sla<=0&&!S.over){S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts};emit('gameOver',S.finalStats)}
- if(!S.over&&S.mode==='campaign'&&S.t>=CAMPAIGN[S.campaignLevel].seconds){S.won=true;S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts};emit('gameOver',S.finalStats)}
+ if(S.sla<=0&&!S.over){S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts,fastCount:S.fastCount};emit('gameOver',S.finalStats)}
+ if(!S.over&&S.mode==='campaign'&&S.t>=CAMPAIGN[S.campaignLevel].seconds){S.won=true;S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts,fastCount:S.fastCount};emit('gameOver',S.finalStats)}
  if(!S.over&&!S.tutorial&&S.upgrades.length<UPGRADES.length&&S.t>=S.nextUpgradeAt)offerUpgrades();
 }
 function useSecondChance(){
@@ -896,7 +908,7 @@ function gameOverUI(){
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
  DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode,date:S.dailyDate,name:displayNickname(DB.nickname)});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
- if(S.mode==='daily'){var dd=S.dailyDate;if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
+ if(S.mode==='daily'){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true});if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  showOverlay('ovOver');
@@ -1032,10 +1044,10 @@ async function startDaily(){
  }catch(e){}finally{dailyStarting=false}
  startRun('daily');
 }
-$('btnDaily').addEventListener('click',function(){var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);showOverlay('ovDailyIntro')});
+$('btnDaily').addEventListener('click',function(){var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);setText('dailyMissionsIntro','ماموریت‌های شخصی امروز (هرکدام در یک بازی): '+missionsFor(tehranDate()).map(function(x){return x.name}).join(' · '));showOverlay('ovDailyIntro')});
 $('btnDailyStart').addEventListener('click',startDaily);
 $('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
-$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
+$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var completed=DB.daily[dd]&&DB.daily[dd].missions||{};setText('dailyMissionResults','آخرین رشتهٔ بازی: '+toFa(DB.dailyStreak&&DB.dailyStreak.count||0)+' روز'+(DB.dailyStreak&&DB.dailyStreak.date?' (تا '+toFa(DB.dailyStreak.date)+')':'')+' · '+missionsFor(dd).map(function(x){return (completed[x.id]?'✓ ':'○ ')+x.name}).join(' · '));var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
 $('btnDailyBoardBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnLocalBoard').addEventListener('click',function(){
  var rows=$('localBoardRows');rows.textContent='';var list=(Array.isArray(DB.top)?DB.top:[]).slice(0,10);
@@ -1069,7 +1081,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname,missionsFor:missionsFor,advanceStreak:advanceStreak,missionMet:missionMet};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

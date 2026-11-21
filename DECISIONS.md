@@ -131,3 +131,6 @@ Standalone `worker/src/crypto_utils.js` implements SHA-256 and HMAC-SHA256 fallb
 
 ## Continuation — local nickname
 Settings support an optional nickname stored locally, with strict single-word alphabet/length validation, a small blocklist, anonymous fallback and read-time revalidation. Matching server-side function is standalone and parity-tested, not wired into an endpoint. Any future public board must validate again at submission AND read, strengthen moderation and privacy controls, and not claim this filter detects all personal or abusive content.
+
+## Continuation — local daily missions/streak
+Three of five deterministic goals per Tehran date are completed per run and stored locally per day. A consecutive-day streak updates once per completed daily run/date and ignores backdated results; last streak is labeled with its ending date. Tests cover deterministic selection, goal checks and date boundaries. This is not a global or anti-tamper progression system.

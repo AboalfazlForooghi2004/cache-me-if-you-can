@@ -1,0 +1,4 @@
+'use strict';const assert=require('assert'),G=require('./balance_harness').G;
+let a=G.missionsFor('20261101');assert.equal(a.length,3);assert.equal(new Set(a.map(x=>x.id)).size,3);assert.deepEqual(G.missionsFor('20261101'),a);
+let s=G.advanceStreak(null,'20261231');assert.equal(s.count,1);s=G.advanceStreak(s,'20270101');assert.equal(s.count,2);assert.equal(G.advanceStreak(s,'20270101').count,2);assert.equal(G.advanceStreak(s,'20261201').count,2);assert.equal(G.advanceStreak(s,'20270103').count,1);assert.equal(G.advanceStreak(s,'20270230').count,2);
+assert(G.missionMet({id:'served',target:30},{served:30}));assert(!G.missionMet({id:'fast',target:10},{fastCount:9}));assert(G.missionMet({id:'combo',target:12},{maxCombo:12}));assert(G.missionMet({id:'survive',target:60},{sec:61}));assert(G.missionMet({id:'score',target:5000},{score:5000}));console.log('PASS daily local missions and Tehran-date streak calendar transitions');
