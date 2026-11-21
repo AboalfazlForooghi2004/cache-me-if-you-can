@@ -225,7 +225,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 'use strict';
 /* ================= CONFIG ================= */
 const CONFIG={DT:1/60,maxStepsPerFrame:5,msPerSecond:55,
-spawn:{base:1.2,slope:0.07,max:10.0,maxLiveRequests:200},
+spawn:{base:1.2,slope:0.07,max:10.0,lateStart:180,lateSlope:0.035,lateExtraMax:8,maxLiveRequests:200},
 patience:{start:6.0,slope:0.02,min:3.2},fastSec:1.2,
 edge:{oneWayBase:0.18,perUnit:1/1100,process:0.15},
 origin:{baseOneWay:0.35,perUnit:1/1400,process:0.15,concurrency:8,queuePerExtra:0.45,queueMax:4.0,vx:-350,vy:-250},
@@ -326,7 +326,7 @@ function edgeOneWay(d){return (CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit)*(S.
 function originOneWay(x,y){return CONFIG.origin.baseOneWay+dist(x,y,CONFIG.origin.vx,CONFIG.origin.vy)*CONFIG.origin.perUnit}
 function globalMul(){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='surge')return CONFIG.events.surge.globalMul;if(e.type==='blackfriday')return CONFIG.events.blackfriday.globalMul;if(e.type==='viral')return CONFIG.events.viral.globalMul;return 1}
 function cityMul(ci){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='blackfriday'&&e.cityIdx===ci)return CONFIG.events.blackfriday.cityMul;if(e.type==='viral'&&e.cityIdx===ci)return CONFIG.events.viral.cityMul;return 1}
-function lambdaAt(t){var l=Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)*globalMul()*(S.modifier.spawn||1);if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
+function lambdaAt(t){var l=(Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)+Math.min(CONFIG.spawn.lateExtraMax,Math.max(0,t-CONFIG.spawn.lateStart)*CONFIG.spawn.lateSlope))*globalMul()*(S.modifier.spawn||1);if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
 function pickCity(){var u=S.rngSpawn();var total=0,i;var idxs=[];
  if(S.tutorial&&S.t<CONFIG.tutorial.slowStartUntil){idxs=[0,2,1]}else{for(i=0;i<S.cities.length;i++)idxs.push(i)}
  for(i=0;i<idxs.length;i++)total+=S.cities[idxs[i]].w*cityMul(idxs[i]);

@@ -257,6 +257,7 @@ function testBands() {
   check('band greedy p50 >= 240', out.greedy.t[1] >= 240, 'p50=' + out.greedy.t[1].toFixed(1));
   check('band greedy p10 >= 150', out.greedy.t[0] >= 150, 'p10=' + out.greedy.t[0].toFixed(1));
   check('band expert p50 >= 240', out.expert.t[1] >= 240, 'p50=' + out.expert.t[1].toFixed(1));
+  for (const pol of ['expert','greedy']) check('band '+pol+' p90 < 550 (600s test cap)', out[pol].t[2] < 550, 'p90='+out[pol].t[2].toFixed(1));
   console.log('\npolicy   survival p10/p50/p90      score p10/p50/p90');
   for (const pol of ['lazy', 'novice', 'human', 'expert', 'greedy'])
     console.log(pol.padEnd(8), out[pol].t.map(v => v.toFixed(0).padStart(4)).join('/'), '   ', out[pol].s.map(v => String(Math.round(v)).padStart(6)).join('/'));

@@ -113,3 +113,6 @@ CONFIG `secondChance:{sla:30}`. After first non-tutorial loss the player may fin
 
 ## Continuation — offline upgrades
 Six per-run nonstacking upgrades offered deterministically, up to three choices at 45-second intervals; selection pauses simulation. Effects are documented in STATUS. Headless tests cover seeded offers and pick distribution; browser smoke covers selection. Critical caveat: expert/greedy hit the 600s cap at the median; the current balance is not release-ready even though required lower bounds pass.
+
+## Continuation — late traffic ramp
+CONFIG spawn adds `lateStart:180, lateSlope:0.035, lateExtraMax:8`; this mitigates upgrade-powered bot runs getting stuck at the 600s harness cap, without changing early game. Regression requires expert/greedy p90 under 550s as well as the previous minimum bands. See STATUS for results; real-device and human-session duration still unverified.
