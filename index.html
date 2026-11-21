@@ -214,6 +214,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 
 <div class="overlay" id="ovSettings"><div class="card">
   <h2>⚙ تنظیمات</h2>
+  <label for="nicknameInput">نام مستعار محلی (اختیاری)</label><div class="sub">نام واقعی یا اطلاعات شخصی ننویس؛ فقط یک واژه با ۳ تا ۱۶ حرف فارسی یا انگلیسی.</div>
+  <input id="nicknameInput" maxlength="32" autocomplete="off" spellcheck="false" style="width:100%;padding:10px;border-radius:10px;color:#fff;background:#0B1226;border:1px solid #2A3A6B;font:inherit;user-select:text;-webkit-user-select:text" placeholder="ناشناس"><button class="btn small" id="btnNickname">ذخیره نام</button><div class="sub" id="nicknameMessage" role="status"></div>
   <div class="setrow"><span>🔊 صدا</span><div class="tgl" id="tglSound"></div></div>
   <div class="setrow"><span>📳 لرزش</span><div class="tgl" id="tglHaptic"></div></div>
   <div class="setrow"><span>🎞 کاهش حرکت</span><div class="tgl" id="tglMotion"></div></div>
@@ -268,6 +270,15 @@ function rankFor(s){var r=RANKS[0];for(var i=0;i<RANKS.length;i++)if(s>=RANKS[i]
 const TIPS=['نود تازه سرده؛ چند تا درخواست بهش بده تا گرم شه.','جابه‌جا کردنِ زیاد، کَش رو از بین می‌بره.','تهران شلوغ‌ترین شهره، ولی همه‌چی تهران نیست!','در موج فقط ترافیک مخرب رو فیلتر کن.','بعد از قطعی برق، نود دوباره باید گرم شه.','نودها رو پخش کن، نه روی هم.'];
 /* ================= STORAGE ================= */
 const Store={mem:null,load:function(){try{var s=localStorage.getItem('cmiyc.v1');if(s)return JSON.parse(s)}catch(e){}return this.mem||null},save:function(d){this.mem=d;try{localStorage.setItem('cmiyc.v1',JSON.stringify(d))}catch(e){}}};
+function normalizeNickname(value){
+ if(typeof value!=='string')return null;
+ var n=value.normalize('NFKC').replace(/ك/g,'ک').replace(/ي/g,'ی').trim();
+ if(!/^[A-Za-z\u0621-\u063A\u0641-\u064A\u0671-\u06D3]{3,16}$/.test(n))return null;
+ var blocked=['admin','administrator','moderator','support','http','www','com','fuck','shit','nazi','کس','کیر','کون','جنده'];
+ var folded=n.toLowerCase();if(blocked.some(function(x){return folded.indexOf(x)!==-1}))return null;
+ return n;
+}
+function displayNickname(value){return normalizeNickname(value)||'ناشناس'}
 function defaultData(){return{settings:{sound:true,haptics:true,reducedMotion:null,lang:'fa'},best:0,top:[],daily:{},tutorialSeen:false,runs:0}}
 let DB=defaultData();try{var _d=Store.load();if(_d&&_d.settings)DB=_d}catch(e){}
 function saveDB(){try{Store.save(DB)}catch(e){}}
@@ -761,6 +772,7 @@ function endPointer(e){
 canvas.addEventListener('pointerup',endPointer);
 canvas.addEventListener('pointercancel',function(){pointerActive=false;dragNode=null;pendingNode=null;downInfo=null;trail=[]});
 document.addEventListener('keydown',function(e){
+ if(e.target&&(/^(INPUT|TEXTAREA)$/.test(e.target.tagName)||e.target.isContentEditable))return;
  if(e.key==='Escape'||e.key==='p'||e.key==='P'||e.key===' '||e.code==='Space'){e.preventDefault();if(S&&S.phase==='play')pauseGame();else if(S&&S.phase==='pause')resumeGame()}
  if(e.key==='m'||e.key==='M'){DB.settings.sound=!DB.settings.sound;saveDB();syncToggles()}
  if(e.key==='r'||e.key==='R'){if(S&&S.phase==='over')restartRun()}
@@ -883,8 +895,8 @@ function gameOverUI(){
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
- DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode,date:S.dailyDate});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
- if(S.mode==='daily'){var dd=S.dailyDate;if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now()});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
+ DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode,date:S.dailyDate,name:displayNickname(DB.nickname)});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
+ if(S.mode==='daily'){var dd=S.dailyDate;if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  showOverlay('ovOver');
@@ -1023,13 +1035,13 @@ async function startDaily(){
 $('btnDaily').addEventListener('click',function(){var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);showOverlay('ovDailyIntro')});
 $('btnDailyStart').addEventListener('click',startDaily);
 $('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
-$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
+$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
 $('btnDailyBoardBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnLocalBoard').addEventListener('click',function(){
  var rows=$('localBoardRows');rows.textContent='';var list=(Array.isArray(DB.top)?DB.top:[]).slice(0,10);
  if(!list.length){rows.textContent='هنوز رکوردی ثبت نشده.'}
  list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';
- var rank=document.createElement('span');rank.textContent=toFa(i+1)+' · '+rankFor(Number(r.score)||0)[1];
+ var rank=document.createElement('span');rank.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+rankFor(Number(r.score)||0)[1];
  var value=document.createElement('span');value.textContent=toFa(Number(r.score)||0);row.appendChild(rank);row.appendChild(value);rows.appendChild(row)});
  showOverlay('ovLocalBoard');
 });
@@ -1046,7 +1058,8 @@ $('btnFinishRun').addEventListener('click',gameOverUI);
 $('btnAgain').addEventListener('click',restartRun);
 $('btnOverMenu').addEventListener('click',toMenu);
 $('btnShare').addEventListener('click',doShare);
-$('btnSettings').addEventListener('click',function(){syncToggles();showOverlay('ovSettings')});
+$('btnSettings').addEventListener('click',function(){syncToggles();$('nicknameInput').value=normalizeNickname(DB.nickname)||'';setText('nicknameMessage','نام فعلی: '+displayNickname(DB.nickname));showOverlay('ovSettings')});
+$('btnNickname').addEventListener('click',function(){var raw=$('nicknameInput').value;if(!raw.trim()){DB.nickname='';saveDB();setText('nicknameMessage','نام ناشناس انتخاب شد.');return}var n=normalizeNickname(raw);if(!n){setText('nicknameMessage','نام پذیرفته نشد؛ فقط یک واژهٔ مناسب با ۳ تا ۱۶ حرف بنویس.');return}DB.nickname=n;saveDB();$('nicknameInput').value=n;setText('nicknameMessage','ذخیره شد: '+n)});
 $('btnSetBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnShareTaClose').addEventListener('click',function(){showOverlay(S&&S.phase==='over'?'ovOver':'ovMenu')});
 $('btnSound').addEventListener('click',function(){DB.settings.sound=!DB.settings.sound;saveDB();syncToggles();AudioSys.resume()});
@@ -1056,7 +1069,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

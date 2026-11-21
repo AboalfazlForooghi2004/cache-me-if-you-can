@@ -128,3 +128,6 @@ Standalone `worker/src/crypto_utils.js` implements SHA-256 and HMAC-SHA256 fallb
 
 ## Continuation — signed ticket primitive
 `worker/src/tickets.js` implements purpose-bound HMAC tickets and tests; not wired into handler or builds. A signed ticket alone does not prevent replay, establish a valid score, or provide a challenge board. Atomic consumption in a tested storage backend and score validation are prerequisites to enabling endpoints.
+
+## Continuation — local nickname
+Settings support an optional nickname stored locally, with strict single-word alphabet/length validation, a small blocklist, anonymous fallback and read-time revalidation. Matching server-side function is standalone and parity-tested, not wired into an endpoint. Any future public board must validate again at submission AND read, strengthen moderation and privacy controls, and not claim this filter detects all personal or abusive content.
