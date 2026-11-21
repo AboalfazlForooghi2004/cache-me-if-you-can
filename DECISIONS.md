@@ -164,3 +164,6 @@ Private diagnostics provide safe capability probes and a local fallback SHA/HMAC
 
 ## Continuation — private-build guardrails
 Reject obvious client-controlled and generic forwarded headers in build configuration and require an explicit proxy trust acknowledgement; this reduces common misconfiguration but does not establish that any remaining header is trustworthy. Tests check missing acknowledgement and an unsafe header fail without echoing credentials.
+
+## Continuation — storage resource bounds
+Experimental S3 calls now have bounded fetch/body wait times and capped response sizes, tested with hanging fetches, hanging streams and oversized objects. The platform's actual timer, stream and fetch behavior remains unverified. No claim of live S3 reliability is made.

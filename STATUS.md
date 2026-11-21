@@ -113,3 +113,6 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — private-build guardrails
 - Private builds now reject obviously untrusted identity fields such as `Host`, `Origin`, `User-Agent`, `X-Forwarded-For` and `X-Real-IP`; an explicit configured header and acknowledgement are still required, but that acknowledgement is **not proof** of trusted proxy behavior. Negative tests check rejected configuration without printing dummy secrets. Temporary private-build fixture directories are ignored to prevent accidentally staging test bundles. Real platform verification and security review remain mandatory.
+
+## Continuation — S3 resource bounds
+- Experimental private S3 reads now impose a 4-second fetch timeout and a separate 4-second bounded body-read timeout, with 64 KiB object and 1 MiB list-response limits. Timeout and oversized-response tests fail closed using mock streams. Real Arvan support for `AbortController`, streams, timers, outgoing fetch and S3 behavior remains unverified; on incompatibility the experimental online service must remain unavailable rather than fabricate a board.
