@@ -140,3 +140,6 @@ A standalone plausibility checker binds submitted statistics to an expiring star
 
 ## Continuation — bounded S3 listing
 The isolated store exposes sorted prefix listing, up to 100 keys per request; no continuation handling or deployed scoreboard is claimed. Restricted ASCII keys avoid XML entity handling in the list parser. Mock tests are not evidence of S3 ordering or consistency on Arvan.
+
+## Continuation — isolated online flow
+`online_service.js` exercises daily signed starts, score plausibility with single-use nonce, and a bounded sorted/deduplicated board via injected storage. It enforces origin and rate limits only when the host supplies a trustworthy client identity, and fails closed otherwise. It is deliberately not wired into deployable bundles: target platform identity, conditional writes, listing/order, cleanup, moderation, and practical LITE calibration are unverified. LITE is not replay validation and cannot prove legitimate play. Listing scans at most 100 candidate keys.
