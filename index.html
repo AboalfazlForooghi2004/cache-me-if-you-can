@@ -144,6 +144,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="sub">ایران رو سریع کن! 🛕 نود بذار، گرمش کن، ترافیک مخرب رو فیلتر کن</div>
   <div class="bestchip" id="menuBest">🏆 بهترین رکورد: ۰</div>
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
+  <button class="btn" id="btnCampaign">🗺 مسیر پنج‌مرحله‌ای</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
   <button class="btn ghost" id="btnDailyBoard">📅 جدول شخصی امروز</button>
@@ -156,6 +157,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="footer">ساخته‌شده برای مسابقه بازی‌سازی آروان‌کلاد · <span dir="ltr">#GameOnEdge</span></div>
 </div></div>
 
+<div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر پنج‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
 <div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="tip">این چالش روی دستگاه ذخیره می‌شود؛ ثبت جهانی فعال نیست.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
 <div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
 <div class="overlay" id="ovLocalBoard"><div class="card">
@@ -186,7 +188,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 <div class="overlay" id="ovUpgrade"><div class="card"><h2>✨ یک ارتقا انتخاب کن</h2><div class="sub">اثر تا پایان همین بازی باقی می‌ماند.</div><div id="upgradeChoices"></div></div></div>
 <div class="overlay" id="ovSecondChance"><div class="card"><h2>یک فرصت دیگر؟</h2><div class="sub">یک بار در هر بازی، رضایت به ۳۰ برمی‌گردد. ادامه دادن رایگان است و نیازی به اینترنت ندارد.</div><button class="btn primary" id="btnSecondChance">ادامه بازی</button><button class="btn ghost" id="btnFinishRun">پایان بازی</button></div></div>
 <div class="overlay" id="ovOver"><div class="card">
-  <h2>بازی تموم شد!</h2>
+  <h2 id="overTitle">بازی تموم شد!</h2>
   <div class="sub" id="overMode"></div>
   <div class="bigscore" id="overScore">۰</div>
   <div class="scorelabel">امتیاز</div>
@@ -285,6 +287,13 @@ const DAILY_MODIFIERS=[
  {id:'reward',name:'پاداش مسیر',desc:'امتیاز پاسخ‌ها بیشتر است',score:1.1}
 ];
 function dailyModifier(date){return DAILY_MODIFIERS[hash32(Number(date)^0xC0FFEE)%DAILY_MODIFIERS.length]}
+const CAMPAIGN=[
+ {name:'شروع شبکه',seconds:45,spawn:0.85},
+ {name:'شهرهای بیشتر',seconds:60,spawn:0.9},
+ {name:'مسیرهای شلوغ',seconds:75,spawn:0.95},
+ {name:'آزمون لبه',seconds:90,spawn:1},
+ {name:'شبکه سراسری',seconds:105,spawn:1.05}
+];
 const UPGRADES=[
  {id:'capacity',name:'ظرفیت بیشتر',desc:'ظرفیت هر نود یک واحد بیشتر'},
  {id:'warmth',name:'کَش گرم‌تر',desc:'گرم‌شدن کَش ۱۰٪ سریع‌تر'},
@@ -310,7 +319,8 @@ function newRun(seed,mode,opts){
  while(changed&&guardPass<60){changed=false;guardPass++;
   for(var i=0;i<tl.events.length;i++)for(var j=0;j<tl.waves.length;j++){if(tl.events[i].t<CONFIG.conflictGuard.untilT&&Math.abs(tl.events[i].t-tl.waves[j].t)<CONFIG.conflictGuard.minSep){tl.events[i].t+=CONFIG.conflictGuard.shift;changed=true}}
  }
- S={phase:'play',mode:mode||'endless',seed:seed,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
+ var level=mode==='campaign'?Math.max(0,Math.min(4,Number(opts.campaignLevel)||0)):null;
+ S={phase:'play',mode:mode||'endless',seed:seed,campaignLevel:level,won:false,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):mode==='campaign'?CAMPAIGN[level]:{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
  rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,upgrades:[],upgradeOffer:[],upgradeRound:0,nextUpgradeAt:CONFIG.upgrade.first,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
  cities:CITIES.map(function(c){return{id:c.id,x:c.x,y:c.y,w:c.w,serveNodeId:null,pending:0}}),
@@ -511,10 +521,11 @@ function stepSim(dt){
  S.sla=clamp(S.sla,0,100);
  if(S.tutorial&&S.t<CONFIG.tutorial.slaFloorUntil)S.sla=Math.max(S.sla,CONFIG.tutorial.slaFloor);
  if(S.sla<=0&&!S.over){S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts};emit('gameOver',S.finalStats)}
+ if(!S.over&&S.mode==='campaign'&&S.t>=CAMPAIGN[S.campaignLevel].seconds){S.won=true;S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts};emit('gameOver',S.finalStats)}
  if(!S.over&&!S.tutorial&&S.upgrades.length<UPGRADES.length&&S.t>=S.nextUpgradeAt)offerUpgrades();
 }
 function useSecondChance(){
- if(!S||!S.over||S.secondChanceUsed)return false;
+ if(!S||!S.over||S.won||S.secondChanceUsed)return false;
  S.secondChanceUsed=true;S.over=false;S.phase='play';S.sla=CONFIG.secondChance.sla;S.combo=0;S.finalStats=null;S.events.length=0;emit('secondChance',{});return true;
 }
 function applyAction(a){
@@ -820,7 +831,7 @@ function updateHUD(){
  var sw=Math.round(S.sla);
  if(lastHUD.slaw!==sw){lastHUD.slaw=sw;var sf=$('slafill');sf.style.width=sw+'%';sf.classList.toggle('low',sw<CONFIG.sla.lowThreshold)}
  setText('slapct',toFa(sw)+'٪');
- setText('time',fmtTime(S.t));
+ setText('time',fmtTime(S.t)+(S.mode==='campaign'?' / '+fmtTime(CAMPAIGN[S.campaignLevel].seconds):''));
  if(!trayEls||traySigNow()!==traySig)buildTray();else updateTrayTexts(false);
  if(S.t-lastSparkT>=1||S.latHist.length!==lastSparkLen){lastSparkT=S.t;lastSparkLen=S.latHist.length;
   var sc=$('spark').getContext('2d');sc.clearRect(0,0,220,72);sc.strokeStyle='#2DD4BF';sc.lineWidth=2;sc.beginPath();
@@ -828,20 +839,21 @@ function updateHUD(){
  }
 }
 function showOverlay(id){document.querySelectorAll('.overlay').forEach(function(o){o.classList.remove('show')});if(id)$(id).classList.add('show')}
-function startRun(mode, dailySeed, dailyOnline, dailyDate){
+function startRun(mode, dailySeed, dailyOnline, dailyDate, campaignLevel){
  AudioSys.resume();
  var seed;
  if(mode==='daily'){seed=Number.isInteger(dailySeed)?dailySeed:hash32(parseInt(dailyDate||tehranDate(),10)^0xC0FFEE)}
+ else if(mode==='campaign'){campaignLevel=Math.max(0,Math.min(4,Number(campaignLevel)||0));seed=hash32(0xCAFE+campaignLevel)}
  else{var q=new URLSearchParams(location.search);var sq=q.get('seed');seed=sq!==null?parseInt(sq,10):Math.floor(Math.random()*1e9)}
  var _q=new URLSearchParams(location.search);var tut=!DB.tutorialSeen&&mode==='endless'&&_q.get('notut')!=='1';
- newRun(seed,mode,{tutorial:tut,dailyDate:dailyDate||tehranDate()});
+ newRun(seed,mode,{tutorial:tut,dailyDate:dailyDate||tehranDate(),campaignLevel:campaignLevel});
  if(mode==='daily')S.dailyOnline=!!dailyOnline;
  particles=[];floaters=[];trail=[];selectedNode=null;trayEls=null;traySig='';
  $('hud').style.display='flex';showOverlay(null);resize();
  if(tut){$('tutSkip').style.display='block';tutShow(0)}else{$('tutSkip').style.display='none'}
- banner(mode==='daily'?'📅 '+S.modifier.name+' — جدول شخصی':'▶ بازی شروع شد!','good');
+ banner(mode==='daily'?'📅 '+S.modifier.name+' — جدول شخصی':mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name+' · '+toFa(CAMPAIGN[S.campaignLevel].seconds)+' ثانیه':'▶ بازی شروع شد!','good');
 }
-function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,S.dailyOnline,S.dailyDate)}
+function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,S.dailyOnline,S.dailyDate,S.campaignLevel)}
 let resumeIv=null,resuming=false;
 function clearResume(){if(resumeIv){clearInterval(resumeIv);resumeIv=null}resuming=false;try{$('countdown').style.display='none'}catch(e){}}
 function pauseGame(){if(!S||S.phase!=='play')return;clearResume();S.phase='pause';showOverlay('ovPause')}
@@ -862,9 +874,11 @@ function refreshMenu(){
 }
 function gameOverUI(){
  var f=S.finalStats;var r=rankFor(f.score);
+ setText('overTitle',S.won?'مرحله کامل شد!':'بازی تموم شد!');
+ if(S.won&&S.mode==='campaign'){DB.campaignUnlocked=Math.min(5,Math.max(Number(DB.campaignUnlocked)||1,S.campaignLevel+2))}
  setText('overScore',toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')));
  setText('overRank',r[1]);setText('overFunny',r[2]);
- setText('overMode',S.mode==='daily'?('📅 چالش '+S.dailyDate+' · '+S.modifier.name+' — جدول شخصی'):'حالت آزاد');
+ setText('overMode',S.mode==='daily'?('📅 چالش '+S.dailyDate+' · '+S.modifier.name+' — جدول شخصی'):S.mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name:'حالت آزاد');
  setText('stLat',toFa(f.ms));setText('stHit',toFa(f.hitPct)+'٪');setText('stCombo','×'+toFa(f.maxCombo));setText('stTime',fmtTime(f.sec));
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
@@ -913,7 +927,7 @@ function handleEvents(){
   }
   else if(ev.type==='slotUnlocked'){toast('یه نود جدید باز شد!');AudioSys.unlock();vibrate(15)}
   else if(ev.type==='friendlyFire'){toast('ترافیک سالم رو فیلتر کردی!');AudioSys.timeout()}
-  else if(ev.type==='gameOver'){AudioSys.gameover();vibrate(80);if(!S.secondChanceUsed&&!S.tutorial)showOverlay('ovSecondChance');else gameOverUI()}
+  else if(ev.type==='gameOver'){AudioSys.gameover();vibrate(80);if(!S.won&&!S.secondChanceUsed&&!S.tutorial)showOverlay('ovSecondChance');else gameOverUI()}
  }
  S.events.length=0;
 }
@@ -992,6 +1006,8 @@ function loopBody(ts){
 }
 /* ================= WIRING ================= */
 $('btnPlay').addEventListener('click',function(){startRun('endless')});
+$('btnCampaign').addEventListener('click',function(){var root=$('campaignChoices');root.textContent='';var unlocked=Math.max(1,Math.min(5,Number(DB.campaignUnlocked)||1));CAMPAIGN.forEach(function(level,i){var b=document.createElement('button');b.className='btn';b.disabled=i>=unlocked;b.textContent=(i>=unlocked?'🔒 ':'')+toFa(i+1)+' · '+level.name+' — '+toFa(level.seconds)+' ثانیه';b.addEventListener('click',function(){if(i<unlocked)startRun('campaign',null,false,null,i)});root.appendChild(b)});showOverlay('ovCampaign')});
+$('btnCampaignBack').addEventListener('click',function(){showOverlay('ovMenu')});
 let dailyStarting=false;
 async function startDaily(){
  if(dailyStarting)return;dailyStarting=true;
@@ -1040,7 +1056,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

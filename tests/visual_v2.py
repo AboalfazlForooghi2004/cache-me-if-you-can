@@ -6,6 +6,7 @@ out=root/'tests/screenshots/stage-current'
 with sync_playwright() as p:
  b=p.chromium.launch();pg=b.new_page(viewport={'width':390,'height':844});errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
  pg.goto(url);pg.wait_for_timeout(1300)
+ pg.click('#btnCampaign');assert pg.locator('#campaignChoices button').count()==5;assert pg.locator('#campaignChoices button').nth(1).is_disabled();pg.screenshot(path=str(out/'390x844-campaign.png'));pg.locator('#campaignChoices button').first.click();assert pg.evaluate("window.__game.state.mode==='campaign'");pg.evaluate("window.__game.state.t=44.99;window.__game.state.nextArrival=999;window.__game.state.sla=100");pg.wait_for_selector('#ovOver.show');assert 'کامل شد' in pg.locator('#overTitle').inner_text();pg.click('#btnOverMenu');pg.click('#btnCampaign');assert not pg.locator('#campaignChoices button').nth(1).is_disabled();pg.click('#btnCampaignBack');
  pg.click('#btnDaily');assert 'رفت‌وآمد سریع' in pg.locator('#dailyIntro').inner_text();pg.screenshot(path=str(out/'390x844-daily-intro.png'))
  pg.click('#btnDailyBack');pg.click('#btnDailyBoard');assert 'رفت‌وآمد سریع' in pg.locator('#dailyBoardInfo').inner_text();pg.screenshot(path=str(out/'390x844-daily-board.png'))
  pg.click('#btnDailyBoardBack');pg.click('#btnDaily');pg.click('#btnDailyStart');pg.wait_for_timeout(100);assert pg.evaluate("window.__game.state.mode==='daily'&&window.__game.state.modifier.id==='rush'")

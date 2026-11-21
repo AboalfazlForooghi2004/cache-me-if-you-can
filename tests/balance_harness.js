@@ -132,8 +132,8 @@ function makePolicy(policy, S, rngSeed) {
   };
 }
 
-function runBot(seed, policy, maxT, dailyDate) {
-  G.newRun(seed, dailyDate?'daily':'endless', { tutorial: false, dailyDate });
+function runBot(seed, policy, maxT, dailyDate, campaignLevel) {
+  G.newRun(seed, campaignLevel!=null?'campaign':dailyDate?'daily':'endless', { tutorial: false, dailyDate, campaignLevel });
   const S = G.state;
   const tick = makePolicy(policy, S, seed * 7919 + 17);
   let t = 0;
@@ -148,7 +148,7 @@ function runBot(seed, policy, maxT, dailyDate) {
       if (n && n.state !== 'online') throw new Error('invariant: live request on non-online node');
     }
   }
-  return { t: S.t, score: S.score, upgrades: S.upgrades.slice() };
+  return { t: S.t, score: S.score, upgrades: S.upgrades.slice(), won: S.won };
 }
 
 /* ---------- tests ---------- */

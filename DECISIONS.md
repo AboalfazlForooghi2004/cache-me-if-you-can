@@ -116,3 +116,6 @@ Six per-run nonstacking upgrades offered deterministically, up to three choices 
 
 ## Continuation — late traffic ramp
 CONFIG spawn adds `lateStart:180, lateSlope:0.035, lateExtraMax:8`; this mitigates upgrade-powered bot runs getting stuck at the 600s harness cap, without changing early game. Regression requires expert/greedy p90 under 550s as well as the previous minimum bands. See STATUS for results; real-device and human-session duration still unverified.
+
+## Continuation — campaign
+A minimal sequential 5-level offline survival campaign: fixed seed per level, target time and traffic multiplier per level, local unlock persistence, final win distinct from loss. The 30-seed-per-level bot sensitivity table intentionally varies simulation seeds; it does not measure win rate on each level's fixed shipped seed or actual human success. No global progression or online score submission.
