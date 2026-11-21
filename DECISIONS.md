@@ -146,3 +146,6 @@ The isolated store exposes sorted prefix listing, up to 100 keys per request; no
 
 ## Continuation — isolated signed challenge prototype
 The standalone service mints HMAC-bound challenge links and a separate challenge score namespace; date and seed are signed, and start-ticket lifetime cannot exceed the challenge lifetime. Mock-only tests cover round-trip, separation from daily board and expiry. No client or deployed handler consumes these endpoints yet. A link signature does not establish fair play or atomic store behavior.
+
+## Continuation — experimental private bundle
+Explicit, all-or-nothing `PRIVATE_BUILD=1` generates secret-bearing bundles exclusively in ignored `private_dist/` while retaining secret-free public artifacts. Private endpoint flow and diagnostics are tested against a mock S3 backend, not Arvan. An operator must configure and confirm a proxy-overwritten identity header: accepting a spoofable header compromises rate limits. Private bundles are staging-only pending target platform verification, lifecycle controls, moderation and client integration; LITE is heuristic, not replay verification.
