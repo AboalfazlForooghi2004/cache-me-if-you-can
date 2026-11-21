@@ -122,3 +122,6 @@ A minimal sequential 5-level offline survival campaign: fixed seed per level, ta
 
 ## Continuation — isolated SigV4/store building blocks
 Added a WebCrypto S3 signing primitive and standalone GET / conditional-create adapter, plus memory mock. Official AWS GET-object vector and mock-store tests run in `tests/run_all.js`. Restricted keys and HTTPS endpoints are intentional. The code is not connected to the handler or generated worker, is not a complete S3 leaderboard, has no list/index implementation or JS HMAC fallback, and has not been tested on Arvan. Secret-containing builds remain deliberately refused.
+
+## Continuation — cryptographic fallback
+Standalone `worker/src/crypto_utils.js` implements SHA-256 and HMAC-SHA256 fallback, cross-checked against Node crypto and SubtleCrypto with padding and key-size edge cases. Isolated SigV4 can use it when SubtleCrypto is absent; the official AWS vector passes both paths. These components are not wired into the public worker or production scoring and have not been independently audited.

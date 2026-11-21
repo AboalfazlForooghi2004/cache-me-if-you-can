@@ -1,16 +1,17 @@
 'use strict';
 // Isolated S3 Signature V4 primitive. Not wired into the public worker.
-// Requires a WebCrypto SubtleCrypto implementation and does not log credentials.
+// Uses WebCrypto when available and the tested local fallback otherwise; never logs credentials.
+const {sha256,hmacSha256}=require('./crypto_utils');
 const encoder=new TextEncoder();
 const utf8=s=>encoder.encode(s);
 const hex=bytes=>Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');
 function awsEncode(s){return encodeURIComponent(s).replace(/[!'()*]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase())}
 function canonicalPath(path){return path.split('/').map(part=>awsEncode(decodeURIComponent(part))).join('/')||'/'}
 function canonicalQuery(params){const pairs=[];for(const [k,v] of params)pairs.push([awsEncode(k),awsEncode(v)]);pairs.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]<b[1]?-1:a[1]>b[1]?1:0);return pairs.map(p=>p[0]+'='+p[1]).join('&')}
-async function sha(subtle,data){return hex(await subtle.digest('SHA-256',data))}
-async function hmac(subtle,key,data){const k=await subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-256'},false,['sign']);return new Uint8Array(await subtle.sign('HMAC',k,utf8(data)))}
+async function sha(subtle,data){return hex(subtle?await subtle.digest('SHA-256',data):sha256(data))}
+async function hmac(subtle,key,data){return hmacSha256(key,utf8(data),subtle)}
 async function signS3Request({method,url,headers={},body='',accessKey,secretKey,region,now=new Date(),subtle=globalThis.crypto&&globalThis.crypto.subtle}){
- if(!subtle||!accessKey||!secretKey||!region)throw new Error('Missing signing configuration');
+ if(typeof accessKey!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(accessKey)||typeof secretKey!=='string'||!secretKey||typeof region!=='string'||!/^[A-Za-z0-9-]{1,64}$/.test(region))throw new Error('Invalid signing configuration');
  const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||u.hash)throw new Error('Invalid S3 URL');
  if(!/^(GET|PUT|DELETE|HEAD)$/.test(method))throw new Error('Unsupported method');
  const bytes=typeof body==='string'?utf8(body):body instanceof Uint8Array?body:null;if(!bytes)throw new Error('Unsupported body');
