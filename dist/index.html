@@ -58,6 +58,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 .tutskip{position:absolute;bottom:calc(var(--hud-bot,110px) + 86px);left:50%;transform:translateX(-50%);pointer-events:auto;background:none;border:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;z-index:33;display:none}
 .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,6,14,.72);backdrop-filter:blur(3px);z-index:40;padding:16px}
 .overlay.show{display:flex}
+.sharesheet{align-items:flex-end}.sharesheet .card{max-width:520px;border-radius:20px 20px 0 0}.sharesheet .btn{min-height:44px;margin:4px 0}@media (orientation:landscape){.sharesheet{align-items:center}.sharesheet .card{max-height:94vh}.sharesheet img{float:right;max-width:30%!important;max-height:60vh!important;margin:0 8px!important}}
 .card{background:linear-gradient(180deg,#141E3D,#0D1428);border:1px solid var(--line);border-radius:20px;padding:22px 18px;width:100%;max-width:400px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:92vh;overflow:auto}
 .card h1{margin:0 0 4px;font-size:30px;font-weight:900;color:var(--turq);text-shadow:0 0 24px rgba(45,212,191,.5)}
 .card h2{margin:0 0 10px;font-size:22px;font-weight:900}
@@ -205,12 +206,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="row"><button class="btn" id="btnShare">📤 اشتراک‌گذاری</button><button class="btn ghost" id="btnOverMenu">🏠 منو</button></div>
 </div></div>
 
-<div class="overlay" id="ovShareText"><div class="card">
- <h2>متن اشتراک</h2>
- <textarea id="shareTa" readonly rows="5" style="width:100%;direction:rtl;text-align:right;background:#0B1226;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px;font-family:inherit;font-size:14px;user-select:text;-webkit-user-select:text"></textarea>
- <button class="btn primary" id="btnShareTaClose">باشه</button>
-</div></div>
-
+<div class="overlay sharesheet" id="ovShare"><div class="card"><h2>اشتراک نتیجه</h2><img id="sharePreview" alt="پیش‌نمایش کارت نتیجه" style="display:block;max-height:34vh;max-width:100%;margin:auto;border-radius:12px"><div class="sub" id="shareLoading">در حال آماده‌سازی تصویر…</div><button class="btn primary" id="shareImage" disabled>🖼 اشتراک تصویر</button><button class="btn" id="shareText">📝 اشتراک متن</button><div class="row"><button class="btn small ghost" id="saveImage" disabled>ذخیره تصویر</button><button class="btn small ghost" id="copyText">کپی متن</button></div><button class="btn small ghost" id="closeShare">برگرد</button></div></div>
 <div class="overlay" id="ovSettings"><div class="card">
   <h2>⚙ تنظیمات</h2>
   <label for="nicknameInput">نام مستعار محلی (اختیاری)</label><div class="sub">نام واقعی یا اطلاعات شخصی ننویس؛ فقط یک واژه با ۳ تا ۱۶ حرف فارسی یا انگلیسی.</div>
@@ -345,7 +341,7 @@ function newRun(seed,mode,opts){
  }
  var level=mode==='campaign'?Math.max(0,Math.min(4,Number(opts.campaignLevel)||0)):null;
  S={phase:'play',mode:mode||'endless',seed:seed,campaignLevel:level,won:false,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):mode==='campaign'?CAMPAIGN[level]:{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
- rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,upgrades:[],upgradeOffer:[],upgradeRound:0,nextUpgradeAt:CONFIG.upgrade.first,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
+ rngSpawn:rngSpawn,rngTl:rngTl,turboCount:0,goldenCount:0,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,upgrades:[],upgradeOffer:[],upgradeRound:0,nextUpgradeAt:CONFIG.upgrade.first,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
  cities:CITIES.map(function(c){return{id:c.id,x:c.x,y:c.y,w:c.w,serveNodeId:null,pending:0}}),
  nodes:[],requests:[],bots:[],slotsTotal:CONFIG.nodes.startSlots,nextUnlockIdx:1,
@@ -521,10 +517,10 @@ function stepSim(dt){
    var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*Math.min(6,mult*(S.t<S.turboUntil?2:1))*ymul*damp*(clutch?2:1)*(S.modifier.score||1));
    var fast=elapsed<=CONFIG.fastSec;
    var goldenFast=!!r.golden&&fast;
-   if(goldenFast){pts*=CONFIG.golden.fastPoints;S.sla=Math.min(100,S.sla+CONFIG.golden.slaGain)}
+   if(goldenFast){S.goldenCount=(S.goldenCount||0)+1;pts*=CONFIG.golden.fastPoints;S.sla=Math.min(100,S.sla+CONFIG.golden.slaGain)}
    var oldMult=mult;
    if(clutch)S.sla=Math.min(100,S.sla+1);
-   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.modifier.gain||1)*(hasUpgrade('recovery')?1.15:1)*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
+   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.modifier.gain||1)*(hasUpgrade('recovery')?1.15:1)*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;S.turboCount=(S.turboCount||0)+1;emit('turboStart',{})}}
    var newMult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    S.score+=pts;S.served++;S.latencySum+=elapsed;
    if(r.route==='hit'){S.hits++;var hn=nodeById(r.nodeId);if(hn)hn.hitsServed++}else if(r.route==='miss')S.misses++;else S.originServes++;
@@ -919,9 +915,9 @@ function gameOverUI(){
  DB.runs++;
  if(S.mode==='daily'&&!S.challengeToken){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true})}
  saveDB();
- setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
+ S.newBest=isBest;setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  setText('onlineStatus','');$('btnChallengeLink').style.display=S.challengeMakerTicket?'block':'none';
- showOverlay('ovOver');if(S.onlineTicket){$('scoreName').value=normalizeNickname(DB.nickname)||'';setText('scoreNameError','');showOverlay('ovName')}
+ showOverlay('ovOver');prepareShare(S);if(S.onlineTicket){$('scoreName').value=normalizeNickname(DB.nickname)||'';setText('scoreNameError','');showOverlay('ovName')}
 }
 const TUT_MSGS=['روی تهران لمس کن، نود بذار 👆','نود تازه سرده 🥶 — با ترافیک گرم می‌شه','هر شهر می‌ره سراغ نزدیک‌ترین نود','ترافیک مخرب! با انگشت فیلترش کن ✋ به شهرها دست نزن!','می‌تونی نودها رو جابه‌جا کنی — ولی کَشش پاک می‌شه!'];
 function tutShow(i){var el=$('tut');el.textContent=TUT_MSGS[i];el.classList.add('show');S.tutCur=i;S.tutNext=i+1;S.tutShownAt=S.t;S.tutVisible=true}
@@ -966,46 +962,25 @@ function handleEvents(){
  S.events.length=0;
 }
 /* ================= SHARE ================= */
-function shareText(){
- var f=S?S.finalStats:{score:0,ms:0};var r=rankFor(f.score);
- var pre=S&&S.mode==='daily'?('چالش '+(jalaliLabel()||'')+': '):'';
- return pre+'من ایران رو با میانگین '+f.ms+'ms سریع کردم و '+f.score+' امتیاز گرفتم! ('+r[1]+') — تو می‌تونی؟ 👉 '+SHARE_URL+' #GameOnEdge #آروان_کلاد';
+function shareText(run){run=run||S;var f=run.finalStats,r=rankFor(f.score),url=run.challengeUrl||SHARE_URL;return '🛕 کَشَم کن اگه می‌تونی\n'+toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬'))+' امتیاز · لقب «'+r[1]+'» · میانگین تأخیر '+toFa(f.ms)+'ms'+(run.mode==='daily'?' · چالش امروز: '+run.modifier.name:'')+'\nمی‌تونی ازم جلو بزنی؟ '+url+'\n#GameOnEdge'}
+function renderShareCard(run){
+ var c=document.createElement('canvas');c.width=1080;c.height=1350;var g=c.getContext('2d'),f=run.finalStats,r=rankFor(f.score),grad=g.createLinearGradient(0,0,1080,1350);grad.addColorStop(0,'#050A0C');grad.addColorStop(1,'#071518');g.fillStyle=grad;g.fillRect(0,0,1080,1350);g.strokeStyle='rgba(45,212,191,.08)';g.lineWidth=2;for(var x=48;x<1032;x+=80)for(var y=48;y<1302;y+=80){g.beginPath();g.moveTo(x,y-16);g.lineTo(x+16,y);g.lineTo(x,y+16);g.lineTo(x-16,y);g.closePath();g.stroke()}g.direction='rtl';g.textAlign='center';g.textBaseline='middle';
+ function text(t,x,y,size,color,max,weight){g.fillStyle=color;g.font=(weight||'700')+' '+size+'px Vazirmatn, sans-serif';while(g.measureText(t).width>max&&size>16){size--;g.font=(weight||'700')+' '+size+'px Vazirmatn, sans-serif'}g.fillText(t,x,y,max)}
+ function pill(x,y,w,h,fill){g.fillStyle=fill;g.beginPath();g.roundRect(x,y,w,h,h/2);g.fill()}
+ g.shadowColor='#2dd4bf';g.shadowBlur=30;text('کَشَم کن اگه می‌تونی',540,100,72,'#57ffe3',960,'900');g.shadowBlur=0;text('ایران رو سریع کن!',540,160,32,'#b2d9d6',960);var mode=run.mode==='daily'?'چالش امروز: '+run.modifier.name:run.mode==='campaign'?'مرحله '+toFa(run.campaignLevel+1)+': '+CAMPAIGN[run.campaignLevel].name:'بازی آزاد';pill(260,190,560,55,'#143a3a');text(mode,540,218,28,'#c2fff1',530);
+ var sc=.50,ox=290,oy=260;g.beginPath();OUTLINE.forEach(function(p,i){if(i)g.lineTo(ox+p.x*sc,oy+p.y*sc);else g.moveTo(ox+p.x*sc,oy+p.y*sc)});g.closePath();g.fillStyle='#113033';g.fill();g.strokeStyle='#1e8c80';g.lineWidth=3;g.stroke();
+ run.cities.forEach(function(city,ci){var n=run.nodes.find(function(z){return z.id===city.serveNodeId});if(n){g.strokeStyle='rgba(45,212,191,.3)';g.lineWidth=2;g.beginPath();g.moveTo(ox+city.x*sc,oy+city.y*sc);g.lineTo(ox+run.cities[n.cityIdx].x*sc,oy+run.cities[n.cityIdx].y*sc);g.stroke()}g.fillStyle='#b1f8ea';g.beginPath();g.arc(ox+city.x*sc,oy+city.y*sc,4,0,6.29);g.fill();text(CITIES[ci].fa,ox+city.x*sc,oy+city.y*sc+17,17,'#d9f3ef',100)});
+ run.nodes.forEach(function(n){var city=run.cities[n.cityIdx],xx=ox+city.x*sc,yy=oy+city.y*sc;g.strokeStyle='#f5c451';g.lineWidth=4;g.beginPath();g.arc(xx,yy-8,20,-Math.PI/2,-Math.PI/2+Math.max(0,Math.min(1,n.warmth))*6.28);g.stroke();g.fillStyle=NODE_COLORS[(n.slot||0)%5];g.beginPath();g.moveTo(xx-14,yy+7);g.quadraticCurveTo(xx-14,yy-12,xx,yy-19);g.quadraticCurveTo(xx+14,yy-12,xx+14,yy+7);g.closePath();g.fill()});
+ if(run.newBest||(run.onlineRank&&run.onlineRank<=3)){pill(380,710,320,48,'#634e1a');text('👑 رکورد درخشان',540,734,27,'#ffdf8b',300)}text(toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')),540,805,112,'#ffffff',930,'900');text('امتیاز',540,875,29,'#a5d6cf',900);pill(210,905,660,62,'#634e1a');text(r[1]+'  ·  '+r[2],540,936,27,'#ffdf8b',620);var labels=['میانگین تأخیر','ضربه‌ی کَش','بیشترین کمبو','مدت دوام'],vals=[toFa(f.ms)+' ms',toFa(f.hitPct)+'٪','×'+toFa(f.maxCombo),fmtTime(f.sec)];for(var i=0;i<4;i++){var xx=48+i*250;g.fillStyle='#133437';g.beginPath();g.roundRect(xx,990,230,96,18);g.fill();text(labels[i],xx+115,1019,20,'#a6c9c4',212);text(vals[i],xx+115,1059,30,'#f3ffff',212)}var badges=[];if(run.upgrades&&run.upgrades.length)badges.push('ارتقا '+toFa(run.upgrades.length));if(run.turboCount)badges.push('⚡ '+toFa(run.turboCount));if(run.goldenCount)badges.push('🌟 '+toFa(run.goldenCount));if(badges.length)text(badges.join('  ·  '),540,1120,25,'#76f2d8',960);if(run.onlineRank)text('رتبه '+toFa(run.onlineRank)+' از '+toFa(run.onlineTotal)+' امروز',540,1164,26,'#ffd77b',960);if(DB.nickname)text(DB.nickname,540,1200,24,'#dcfff6',960);text((jalaliLabel()||tehranDate()),540,1230,24,'#9bc7c1',960);g.direction='ltr';text('#GameOnEdge',540,1260,24,'#9bc7c1',960);text(run.challengeUrl||location.host||'آفلاین',540,1294,22,'#76d9ca',960);return c;
 }
-function buildShareCard(){
- var c=document.createElement('canvas');c.width=1080;c.height=1350;var g=c.getContext('2d');
- var gr=g.createLinearGradient(0,0,0,1350);gr.addColorStop(0,'#070B18');gr.addColorStop(1,'#0D1428');g.fillStyle=gr;g.fillRect(0,0,1080,1350);
- g.strokeStyle='rgba(45,212,191,0.07)';for(var x=0;x<1080;x+=90)for(var y=0;y<1350;y+=90){g.beginPath();g.moveTo(x,y+22);g.lineTo(x+22,y);g.lineTo(x+44,y+22);g.lineTo(x+22,y+44);g.closePath();g.stroke()}
- g.direction='rtl';g.textAlign='center';
- g.fillStyle='#2DD4BF';g.font='900 96px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText('کَشَم کن اگه می‌تونی',540,180);
- g.fillStyle='#8A97C2';g.font='400 40px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText('ایران رو سریع کن!',540,240);
- var sc=Math.min(900/1000,540/892);var ox=540-500*sc,oy=290;
- g.beginPath();for(var i=0;i<OUTLINE.length;i++){var px=ox+OUTLINE[i].x*sc,py=oy+OUTLINE[i].y*sc;if(i===0)g.moveTo(px,py);else g.lineTo(px,py)}g.closePath();g.fillStyle='#121B35';g.fill();g.strokeStyle='#2A3A6B';g.lineWidth=4;g.stroke();
- for(var ci=0;ci<CITIES.length;ci++){var cp={x:ox+CITIES[ci].x*sc,y:oy+CITIES[ci].y*sc};g.beginPath();g.arc(cp.x,cp.y,10,0,6.29);g.fillStyle='#fff';g.fill();g.fillStyle='#E8EEFF';g.font='400 22px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText(CITIES[ci].fa,cp.x,cp.y+34)}
- if(S)for(var ni=0;ni<S.nodes.length;ni++){var n=S.nodes[ni];var np={x:ox+S.cities[n.cityIdx].x*sc,y:oy+S.cities[n.cityIdx].y*sc};g.fillStyle=NODE_COLORS[(n.slot||0)%5];g.beginPath();g.moveTo(np.x-26,np.y+10);g.quadraticCurveTo(np.x-26,np.y-26,np.x,np.y-36);g.quadraticCurveTo(np.x+26,np.y-26,np.x+26,np.y+10);g.closePath();g.fill();g.strokeStyle='#F5C451';g.lineWidth=5;g.beginPath();g.arc(np.x,np.y-10,34,-Math.PI/2,-Math.PI/2+n.warmth*6.29);g.stroke()}
- var f=S?S.finalStats:{score:0,ms:0,hitPct:0,maxCombo:0};var r=rankFor(f.score);
- g.fillStyle='#fff';g.font='900 160px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText(toFa(f.score),540,980);
- g.fillStyle='#8A97C2';g.font='400 36px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText('امتیاز',540,1030);
- g.fillStyle='#F5C451';g.font='900 44px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText(r[1],540,1100);
- g.fillStyle='#E8EEFF';g.font='400 30px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';
- g.fillText('میانگین تأخیر '+toFa(f.ms)+'ms  ·  ضربه‌ی کَش '+toFa(f.hitPct||0)+'٪  ·  کمبو ×'+toFa(f.maxCombo||0),540,1180);
- g.fillStyle='#8A97C2';g.font='400 28px Vazirmatn,"Noto Sans Arabic","Geeza Pro",Tahoma,sans-serif';g.fillText('#GameOnEdge  ·  '+SHARE_URL,540,1300);
- return c;
-}
-function showShareTextBox(txt){try{$('shareTa').value=txt;showOverlay('ovShareText')}catch(e){}}
-function doShare(){
- var txt=shareText();var card=buildShareCard();
- function clipboardStep(){
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('کپی شد 📋')}).catch(function(){showShareTextBox(txt)})}
-  else showShareTextBox(txt);
- }
- function fallback(){try{card.toBlob(function(b){if(!b){clipboardStep();return}var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cache-me-'+(S?S.score:0)+'.png';a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);clipboardStep()})}catch(e){clipboardStep()}}
- try{
-  if(card.toBlob){card.toBlob(function(b){if(!b){fallback();return}var file=null;try{file=new File([b],'cache-me.png',{type:'image/png'})}catch(e){}
-   if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:txt}).catch(function(err){if(err&&err.name==='AbortError'){toast('اشتراک لغو شد');return}fallback()})}
-   else fallback();
-  })}else fallback();
- }catch(e){fallback()}
-}
+let sharePrepared=null,shareObjectUrl=null;
+async function prepareShare(run){sharePrepared=null;try{if(document.fonts&&document.fonts.load)await document.fonts.load('900 50px Vazirmatn');if(S!==run)return;var c=renderShareCard(run),blob=await new Promise(function(resolve){c.toBlob(resolve,'image/png')});if(!blob||S!==run)return;var file;try{file=new File([blob],'cache-me.png',{type:'image/png'})}catch(e){file=null}if(shareObjectUrl)URL.revokeObjectURL(shareObjectUrl);shareObjectUrl=URL.createObjectURL(blob);sharePrepared={file:file,url:shareObjectUrl,text:shareText(run)};$('sharePreview').src=shareObjectUrl;$('shareLoading').style.display='none';$('shareImage').disabled=!file;$('saveImage').disabled=false}catch(e){$('shareLoading').textContent='ساخت تصویر در دسترس نیست.'}}
+function doShare(){if(!S||!S.finalStats)return;$('shareLoading').style.display=sharePrepared?'none':'block';$('shareImage').disabled=!sharePrepared||!sharePrepared.file;$('saveImage').disabled=!sharePrepared;showOverlay('ovShare')}
+function downloadShare(){if(!sharePrepared)return;var a=document.createElement('a');a.href=sharePrepared.url;a.download='cache-me.png';a.click();toast('تصویر ذخیره شد')}
+function copyShareText(){var txt=shareText();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast('کپی شد')}).catch(function(){toast('کپی متن در دسترس نیست')});else toast('کپی متن در دسترس نیست')}
+$('shareImage').addEventListener('click',function(){if(!sharePrepared)return;var d={files:[sharePrepared.file],text:sharePrepared.text};try{if(navigator.share&&navigator.canShare&&navigator.canShare({files:d.files})){navigator.share(d).catch(function(e){if(!e||e.name!=='AbortError')downloadShare()})}else downloadShare()}catch(e){if(!e||e.name!=='AbortError')downloadShare()}});
+$('shareText').addEventListener('click',function(){try{if(navigator.share)navigator.share({text:shareText()}).catch(function(e){if(!e||e.name!=='AbortError')copyShareText()});else copyShareText()}catch(e){if(!e||e.name!=='AbortError')copyShareText()}});
+$('saveImage').addEventListener('click',downloadShare);$('copyText').addEventListener('click',copyShareText);$('closeShare').addEventListener('click',function(){showOverlay('ovOver')});
 /* ================= DEMO (attract) ================= */
 let demo=null,demoT=0;
 function initDemo(){var prev=S;newRun(12345,'endless',{tutorial:false});demo=S;demo.phase='demo';S=prev;demoT=0}
@@ -1067,7 +1042,7 @@ $('btnFriendChallenge').addEventListener('click',function(){activeChallenge=chal
 $('btnDailyStart').addEventListener('click',startDaily);
 $('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
 let boardTimer=null,boardArgs=null,boardSequence=0;
-async function openOnlineBoard(challenge,ownId,date,ownKey){clearTimeout(boardTimer);boardArgs=[challenge,ownId,date,ownKey];var seq=++boardSequence;$('btnBoardRetry').style.display='none';var day=date||tehranDate();setText('onlineBoardTitle','جدول آنلاین — '+dailyModifier(day).name);setText('onlineRank','');showOverlay('ovOnlineBoard');var rows=$('onlineBoardRows');rows.textContent='';for(var n=0;n<6;n++){var sk=document.createElement('div');sk.className='skeleton';rows.appendChild(sk)}try{var r=await requestWithTimeout('/api/leaderboard?'+(challenge?'challenge='+encodeURIComponent(challenge):'date='+encodeURIComponent(day))+(ownKey?'&ownKey='+encodeURIComponent(ownKey):''),{},4000);var data=await r.json();if(seq!==boardSequence)return;if(!r.ok||!data.ok||!Array.isArray(data.entries))throw Error('unavailable');if(data.date&&/^\d{8}$/.test(data.date))setText('onlineBoardTitle','جدول آنلاین — '+dailyModifier(data.date).name);rows.textContent='';var list=data.entries.slice(0,50),own=null;if(!list.length)rows.textContent='هنوز کسی بازی نکرده — اولین نفر باش!';list.forEach(function(entry,i){var row=document.createElement('div'),badge=document.createElement('span'),name=document.createElement('span'),score=document.createElement('span');row.className='boardrow'+(ownId&&entry.id===ownId?' own':'');badge.className='boardbadge';badge.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':toFa(i+1);name.className='boardname';name.textContent=displayNickname(entry.name);score.className='boardscore';score.textContent=toFa((Number.isSafeInteger(entry.score)&&entry.score>=0?entry.score:0).toLocaleString('en-US').replace(/,/g,'٬'));row.appendChild(badge);row.appendChild(name);row.appendChild(score);rows.appendChild(row);if(ownId&&entry.id===ownId){own=row;setText('onlineRank','رتبه‌ی تو: '+toFa(i+1)+' از '+toFa(list.length)+' (رکوردهای نمایش‌داده‌شده)')}});if(own)own.scrollIntoView({block:'nearest'});else if(ownId)setText('onlineRank',data.ownRank?'رتبه‌ی تو: '+toFa(data.ownRank):data.rankCapped?'رتبه‌ی تو: +۱۰۰۰':'رکورد تو در فهرست نمایش‌داده‌شده نیست.')}catch(e){if(seq!==boardSequence)return;rows.textContent='اتصال به جدول برقرار نشد';$('btnBoardRetry').style.display='block'}finally{if(seq===boardSequence&&$('ovOnlineBoard').classList.contains('show'))boardTimer=setTimeout(function(){openOnlineBoard.apply(null,boardArgs)},20000)}}
+async function openOnlineBoard(challenge,ownId,date,ownKey){clearTimeout(boardTimer);boardArgs=[challenge,ownId,date,ownKey];var seq=++boardSequence;$('btnBoardRetry').style.display='none';var day=date||tehranDate();setText('onlineBoardTitle','جدول آنلاین — '+dailyModifier(day).name);setText('onlineRank','');showOverlay('ovOnlineBoard');var rows=$('onlineBoardRows');rows.textContent='';for(var n=0;n<6;n++){var sk=document.createElement('div');sk.className='skeleton';rows.appendChild(sk)}try{var r=await requestWithTimeout('/api/leaderboard?'+(challenge?'challenge='+encodeURIComponent(challenge):'date='+encodeURIComponent(day))+(ownKey?'&ownKey='+encodeURIComponent(ownKey):''),{},4000);var data=await r.json();if(seq!==boardSequence)return;if(!r.ok||!data.ok||!Array.isArray(data.entries))throw Error('unavailable');if(data.date&&/^\d{8}$/.test(data.date))setText('onlineBoardTitle','جدول آنلاین — '+dailyModifier(data.date).name);rows.textContent='';var list=data.entries.slice(0,50),own=null;if(!list.length)rows.textContent='هنوز کسی بازی نکرده — اولین نفر باش!';list.forEach(function(entry,i){var row=document.createElement('div'),badge=document.createElement('span'),name=document.createElement('span'),score=document.createElement('span');row.className='boardrow'+(ownId&&entry.id===ownId?' own':'');badge.className='boardbadge';badge.textContent=i===0?'🥇':i===1?'🥈':i===2?'🥉':toFa(i+1);name.className='boardname';name.textContent=displayNickname(entry.name);score.className='boardscore';score.textContent=toFa((Number.isSafeInteger(entry.score)&&entry.score>=0?entry.score:0).toLocaleString('en-US').replace(/,/g,'٬'));row.appendChild(badge);row.appendChild(name);row.appendChild(score);rows.appendChild(row);if(ownId&&entry.id===ownId){own=row;if(S&&S.phase==='over'){S.onlineRank=i+1;S.onlineTotal=list.length;prepareShare(S)}setText('onlineRank','رتبه‌ی تو: '+toFa(i+1)+' از '+toFa(list.length)+' (رکوردهای نمایش‌داده‌شده)')}});if(own)own.scrollIntoView({block:'nearest'});else if(ownId)setText('onlineRank',data.ownRank?'رتبه‌ی تو: '+toFa(data.ownRank):data.rankCapped?'رتبه‌ی تو: +۱۰۰۰':'رکورد تو در فهرست نمایش‌داده‌شده نیست.')}catch(e){if(seq!==boardSequence)return;rows.textContent='اتصال به جدول برقرار نشد';$('btnBoardRetry').style.display='block'}finally{if(seq===boardSequence&&$('ovOnlineBoard').classList.contains('show'))boardTimer=setTimeout(function(){openOnlineBoard.apply(null,boardArgs)},20000)}}
 $('btnBoardRetry').addEventListener('click',function(){if(boardArgs)openOnlineBoard.apply(null,boardArgs)});
 $('btnOnlineBoard').addEventListener('click',function(){openOnlineBoard(null)});
 $('btnFriendBoard').addEventListener('click',function(){openOnlineBoard(challengeParam)});
@@ -1081,14 +1056,14 @@ $('btnRestart').addEventListener('click',function(){showOverlay(null);restartRun
 $('btnToMenu').addEventListener('click',toMenu);
 $('btnSecondChance').addEventListener('click',function(){if(useSecondChance()){showOverlay(null);banner('فرصت دوباره!','good')}});
 $('btnFinishRun').addEventListener('click',gameOverUI);
-$('btnChallengeLink').addEventListener('click',async function(){if(!S||!S.challengeMakerTicket)return;var run=S;setText('onlineStatus','در حال ساخت لینک...');try{var r=await requestWithTimeout('/api/challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:run.challengeMakerTicket})},4000);var d=await r.json();if(!r.ok||!d.ok||typeof d.url!=='string')throw Error('unavailable');var u=new URL(d.url,location.href);if(u.origin!==location.origin||u.pathname!=='/'||!u.searchParams.get('challenge'))throw Error('invalid');if(S===run){$('shareTa').value=u.href;showOverlay('ovShareText');setText('onlineStatus','لینک آماده است؛ مهلت آن محدود است.')}}catch(e){if(S===run)setText('onlineStatus','ساخت لینک در دسترس نیست یا فرصت آن تمام شده است.')}});
+$('btnChallengeLink').addEventListener('click',async function(){if(!S||!S.challengeMakerTicket)return;var run=S;setText('onlineStatus','در حال ساخت لینک...');try{var r=await requestWithTimeout('/api/challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:run.challengeMakerTicket})},4000);var d=await r.json();if(!r.ok||!d.ok||typeof d.url!=='string')throw Error('unavailable');var u=new URL(d.url,location.href);if(u.origin!==location.origin||u.pathname!=='/'||!u.searchParams.get('challenge'))throw Error('invalid');if(S===run){run.challengeUrl=u.href;prepareShare(run);if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u.href).then(function(){toast('لینک کپی شد')}).catch(function(){toast('لینک برای اشتراک آماده است')});setText('onlineStatus','لینک برای اشتراک آماده است؛ مهلت آن محدود است.')}}catch(e){if(S===run)setText('onlineStatus','ساخت لینک در دسترس نیست یا فرصت آن تمام شده است.')}});
 $('btnAgain').addEventListener('click',restartRun);
 $('btnOverMenu').addEventListener('click',toMenu);
 $('btnShare').addEventListener('click',doShare);
 $('btnSettings').addEventListener('click',function(){syncToggles();$('nicknameInput').value=normalizeNickname(DB.nickname)||'';setText('nicknameMessage','نام فعلی: '+displayNickname(DB.nickname));showOverlay('ovSettings')});
 $('btnNickname').addEventListener('click',function(){var raw=$('nicknameInput').value;if(!raw.trim()){DB.nickname='';saveDB();setText('nicknameMessage','نام ناشناس انتخاب شد.');return}var n=normalizeNickname(raw);if(!n){setText('nicknameMessage','نام پذیرفته نشد؛ فقط یک واژهٔ مناسب با ۳ تا ۱۶ حرف بنویس.');return}DB.nickname=n;saveDB();$('nicknameInput').value=n;setText('nicknameMessage','ذخیره شد: '+n)});
 $('btnSetBack').addEventListener('click',function(){showOverlay('ovMenu')});
-$('btnShareTaClose').addEventListener('click',function(){showOverlay(S&&S.phase==='over'?'ovOver':'ovMenu')});
+
 $('btnSound').addEventListener('click',function(){DB.settings.sound=!DB.settings.sound;saveDB();syncToggles();AudioSys.resume()});
 $('btnSound2').addEventListener('click',function(){DB.settings.sound=!DB.settings.sound;saveDB();syncToggles()});
 $('tglSound').addEventListener('click',function(){DB.settings.sound=!DB.settings.sound;saveDB();syncToggles()});
@@ -1097,7 +1072,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get mapScaleY(){return mapScaleY},get mapBounds(){var xs=OUTLINE.map(function(p){return w2s(p.x,p.y).x}),ys=OUTLINE.map(function(p){return w2s(p.x,p.y).y});return {x:Math.min.apply(null,xs),y:Math.min.apply(null,ys),width:Math.max.apply(null,xs)-Math.min.apply(null,xs),height:Math.max.apply(null,ys)-Math.min.apply(null,ys)}},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname,missionsFor:missionsFor,advanceStreak:advanceStreak,missionMet:missionMet,musicTick:musicTick,audio:AudioSys};
+window.__game={renderShareCard:renderShareCard,shareText:shareText,CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get mapScaleY(){return mapScaleY},get mapBounds(){var xs=OUTLINE.map(function(p){return w2s(p.x,p.y).x}),ys=OUTLINE.map(function(p){return w2s(p.x,p.y).y});return {x:Math.min.apply(null,xs),y:Math.min.apply(null,ys),width:Math.max.apply(null,xs)-Math.min.apply(null,xs),height:Math.max.apply(null,ys)-Math.min.apply(null,ys)}},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade,CAMPAIGN:CAMPAIGN,normalizeNickname:normalizeNickname,displayNickname:displayNickname,missionsFor:missionsFor,advanceStreak:advanceStreak,missionMet:missionMet,musicTick:musicTick,audio:AudioSys};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

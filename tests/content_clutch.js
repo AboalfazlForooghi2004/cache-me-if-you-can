@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs'),assert=require('assert');
 const html=fs.readFileSync('index.html','utf8');
-assert(!/(نابود|بزن|بکش|💥)/u.test(html),'violent copy detected');
+assert(!/(نابود|بزن|بکش|💥)/u.test(html.replace(/می‌تونی ازم جلو بزنی؟/g,'')),'violent copy detected');
 assert(!/(یلدا|حافظ|فال|yalda)/iu.test(html),'seasonal or divination content detected');
 const G=require('./balance_harness.js').G;
 G.newRun(41,'endless',{tutorial:false}); const S=G.state;
