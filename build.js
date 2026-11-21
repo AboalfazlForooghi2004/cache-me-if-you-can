@@ -1,7 +1,7 @@
 'use strict';
 // Public artifacts are always secret-free. Private artifacts go ONLY to ignored private_dist/.
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
-const root=__dirname,secretKeys=['WORKER_SECRET','S3_ENDPOINT','S3_REGION','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY','TRUSTED_CLIENT_IP_HEADER'];
+const root=__dirname,secretKeys=['WORKER_SECRET','S3_ENDPOINT','S3_REGION','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY','TRUSTED_CLIENT_IP_HEADER','S3_PATH_STYLE'];
 const wantPrivate=process.env.PRIVATE_BUILD==='1';
 if(!wantPrivate&&secretKeys.some(k=>process.env[k]))throw Error('Private configuration requires explicit PRIVATE_BUILD=1');
 let privateConfig=null;
@@ -9,7 +9,8 @@ if(wantPrivate){
  if(secretKeys.slice(0,6).some(k=>!process.env[k])||Buffer.byteLength(process.env.WORKER_SECRET||'')<32)throw Error('Invalid private configuration');
  let endpoint;try{endpoint=new URL(process.env.S3_ENDPOINT)}catch(e){throw Error('Invalid private configuration')}if(endpoint.protocol!=='https:'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash||endpoint.pathname!=='/')throw Error('Invalid private configuration');
  if(!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(process.env.S3_BUCKET)||!/^[A-Za-z0-9-]{1,64}$/.test(process.env.S3_REGION)||!/^[A-Za-z0-9_-]{1,128}$/.test(process.env.S3_ACCESS_KEY)||(process.env.TRUSTED_CLIENT_IP_HEADER&&!process.env.TRUSTED_CLIENT_IP_HEADER.split(',').every(h=>/^[a-z0-9-]{1,64}$/.test(h.trim())&&!['host','origin','referer','cookie','authorization','user-agent'].includes(h.trim()))))throw Error('Invalid private configuration');
- privateConfig={secret:process.env.WORKER_SECRET,endpoint:process.env.S3_ENDPOINT,region:process.env.S3_REGION,bucket:process.env.S3_BUCKET,accessKey:process.env.S3_ACCESS_KEY,secretKey:process.env.S3_SECRET_KEY,identityHeaders:(process.env.TRUSTED_CLIENT_IP_HEADER||'x-real-ip').split(',').map(h=>h.trim())};
+ if(process.env.S3_PATH_STYLE&&!['true','false','1','0'].includes(process.env.S3_PATH_STYLE))throw Error('Invalid private configuration');
+ privateConfig={pathStyle:!['false','0'].includes(process.env.S3_PATH_STYLE),secret:process.env.WORKER_SECRET,endpoint:process.env.S3_ENDPOINT,region:process.env.S3_REGION,bucket:process.env.S3_BUCKET,accessKey:process.env.S3_ACCESS_KEY,secretKey:process.env.S3_SECRET_KEY,identityHeaders:(process.env.TRUSTED_CLIENT_IP_HEADER||'x-real-ip').split(',').map(h=>h.trim())};
 }
 const html=fs.readFileSync(path.join(root,'src/index.html'),'utf8'),handler=fs.readFileSync(path.join(root,'worker/src/handler.js'),'utf8');
 const og=fs.readFileSync(path.join(root,'assets/og_1200x630.png')).toString('base64');
