@@ -119,3 +119,6 @@ CONFIG spawn adds `lateStart:180, lateSlope:0.035, lateExtraMax:8`; this mitigat
 
 ## Continuation — campaign
 A minimal sequential 5-level offline survival campaign: fixed seed per level, target time and traffic multiplier per level, local unlock persistence, final win distinct from loss. The 30-seed-per-level bot sensitivity table intentionally varies simulation seeds; it does not measure win rate on each level's fixed shipped seed or actual human success. No global progression or online score submission.
+
+## Continuation — isolated SigV4/store building blocks
+Added a WebCrypto S3 signing primitive and standalone GET / conditional-create adapter, plus memory mock. Official AWS GET-object vector and mock-store tests run in `tests/run_all.js`. Restricted keys and HTTPS endpoints are intentional. The code is not connected to the handler or generated worker, is not a complete S3 leaderboard, has no list/index implementation or JS HMAC fallback, and has not been tested on Arvan. Secret-containing builds remain deliberately refused.
