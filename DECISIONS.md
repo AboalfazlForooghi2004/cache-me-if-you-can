@@ -110,3 +110,6 @@ The existing date seed hash also selects one of eight per-run modifier objects; 
 
 ## Continuation — once-only offline second chance
 CONFIG `secondChance:{sla:30}`. After first non-tutorial loss the player may finish or continue, once, at 30 SLA and zero combo; no reward or leaderboard record is saved until final game over. No ad or network dependency. Headless and Chromium tests cover one-use behavior. Tests and bot difficulty runs do not accept this offer automatically.
+
+## Continuation — offline upgrades
+Six per-run nonstacking upgrades offered deterministically, up to three choices at 45-second intervals; selection pauses simulation. Effects are documented in STATUS. Headless tests cover seeded offers and pick distribution; browser smoke covers selection. Critical caveat: expert/greedy hit the 600s cap at the median; the current balance is not release-ready even though required lower bounds pass.

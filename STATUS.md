@@ -14,7 +14,7 @@
 - Stage 6 is **partial**: assets and limited screenshot QA only; not all requested screens exist.
 
 ## Cut / not implemented in this run
-- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
+- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
 - Campaign win rates and upgrade pick rates cannot be reported because those features do not exist.
 
 ## Platform and delivery
@@ -41,4 +41,9 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — second chance
 - A once-per-run, opt-in second chance now appears on first game over (except tutorial): continue with 30 SLA and reset combo, or finish normally. It is free and works offline; no intermediate score is persisted before the decision. Test `tests/second_chance.js` verifies the simulation's once-only state transition; `tests/visual_v2.py` exercises both UI and final game over in Chromium. Screenshots include `390x844-second-chance.png` and daily screens. Bot balance tables above deliberately use the original policy with no second-chance acceptance and so are conservative, not player-session predictions.
-- Second chance is no longer a missing item. Upgrade picks, campaign, secure names and online features remain missing. `node tests/run_all.js` passes. Latest authenticated remote push remains at `9fc6cd6`; a new unauthenticated push failed because this environment does not expose `GITHUB_TOKEN`, so subsequent local commits need pushing or manual bundle transfer.
+- Second chance is no longer a missing item. At that point upgrades, campaign, secure names and online features were missing; see later sections. `node tests/run_all.js` passes. Latest authenticated remote push remains at `9fc6cd6`; a new unauthenticated push failed because this environment does not expose `GITHUB_TOKEN`, so subsequent local commits need pushing or manual bundle transfer.
+
+## Continuation — six upgrade choices
+- At 45 seconds and then every 45 seconds after a choice, deterministic seed-based offers present up to three distinct unowned upgrades; simulation pauses until a valid choice. Each can be chosen once per run: capacity +1, warmth gain +10%, request patience +4%, edge travel −5%, fast-SLA gain +15%, timeout damage −10%. They apply only for that run. Tutorial does not offer upgrades; subsequent play resumes without a network dependency. The capacity indicator shows five pips when upgraded.
+- `tests/upgrades.js` covers deterministic offers, pause and rejecting invalid/duplicate choices, plus 30 human-bot runs. The first-offered-choice policy made 64 picks: capacity 15 (23.4%), warmth 5 (7.8%), patience 7 (10.9%), speed 10 (15.6%), recovery 15 (23.4%), shield 12 (18.8%). These are synthetic policy pick frequencies, not human preference data. Chromium screenshot `390x844-upgrade.png` uses a curated time jump. Tests pass, including 50-seed soak and eight modifier medians.
+- Important balance limitation: expert and greedy frequently reach the 600s harness cap with upgrades; daily expert/greedy median is 600s for all modifiers. This does not establish an actual median of 600s or adequate session length, and needs tuning/playtesting before release. Campaign and secure online functionality remain unimplemented. The prior missing-upgrades statements are superseded by this section.

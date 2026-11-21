@@ -183,6 +183,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="menurow"><button class="iconbtn" id="btnSound2" aria-label="sound">🔊</button></div>
 </div></div>
 
+<div class="overlay" id="ovUpgrade"><div class="card"><h2>✨ یک ارتقا انتخاب کن</h2><div class="sub">اثر تا پایان همین بازی باقی می‌ماند.</div><div id="upgradeChoices"></div></div></div>
 <div class="overlay" id="ovSecondChance"><div class="card"><h2>یک فرصت دیگر؟</h2><div class="sub">یک بار در هر بازی، رضایت به ۳۰ برمی‌گردد. ادامه دادن رایگان است و نیازی به اینترنت ندارد.</div><button class="btn primary" id="btnSecondChance">ادامه بازی</button><button class="btn ghost" id="btnFinishRun">پایان بازی</button></div></div>
 <div class="overlay" id="ovOver"><div class="card">
   <h2>بازی تموم شد!</h2>
@@ -231,6 +232,7 @@ origin:{baseOneWay:0.35,perUnit:1/1400,process:0.15,concurrency:8,queuePerExtra:
 nodes:{capacity:4,startSlots:2,unlockAt:[[0,2],[25,3],[55,4],[95,5]],warmthMin:0.25,warmthMax:0.95,warmthGain:0.07,idleAfter:8,idleDecayPerSec:0.02,relocateSec:1.5,outageWarmthFactor:0.5,reroutePenalty:0.4},
 golden:{chance:0.04,fastPoints:5,slaGain:3},
 secondChance:{sla:30},
+upgrade:{first:45,interval:45},
 turbo:{threshold:12,duration:6,cooldown:20},
 score:{base:10,comboStep:4,comboStepBonus:0.25,comboMaxMult:3.0,botKill:5,perfectWave:300,lateDampFrom:120,lateDampPerSec:1/600,lateDampMin:0.5},
 sla:{start:100,fastGain:0.25,timeout:-8,botLeak:-6,friendlyFire:-3,waveClearGain:5,lowThreshold:20},
@@ -283,6 +285,17 @@ const DAILY_MODIFIERS=[
  {id:'reward',name:'پاداش مسیر',desc:'امتیاز پاسخ‌ها بیشتر است',score:1.1}
 ];
 function dailyModifier(date){return DAILY_MODIFIERS[hash32(Number(date)^0xC0FFEE)%DAILY_MODIFIERS.length]}
+const UPGRADES=[
+ {id:'capacity',name:'ظرفیت بیشتر',desc:'ظرفیت هر نود یک واحد بیشتر'},
+ {id:'warmth',name:'کَش گرم‌تر',desc:'گرم‌شدن کَش ۱۰٪ سریع‌تر'},
+ {id:'patience',name:'کاربران صبورتر',desc:'صبر درخواست‌های جدید ۴٪ بیشتر'},
+ {id:'speed',name:'لبه سریع‌تر',desc:'رفت‌وبرگشت لبه ۵٪ سریع‌تر'},
+ {id:'recovery',name:'بازیابی رضایت',desc:'رضایت سرو سریع ۱۵٪ بیشتر'},
+ {id:'shield',name:'سپردفاعی',desc:'آسیب درخواست ازدست‌رفته ۱۰٪ کمتر'}
+];
+function hasUpgrade(id){return S.upgrades.indexOf(id)!==-1}
+function offerUpgrades(){var pool=UPGRADES.filter(function(u){return !hasUpgrade(u.id)});pool.sort(function(a,b){return hash32(S.seed^Math.imul(S.upgradeRound+1,0x9e3779b1)^UPGRADES.indexOf(a))-hash32(S.seed^Math.imul(S.upgradeRound+1,0x9e3779b1)^UPGRADES.indexOf(b))});S.upgradeOffer=pool.slice(0,3).map(function(u){return u.id});if(S.upgradeOffer.length){S.phase='upgrade';emit('upgradeOffer',{});}}
+function chooseUpgrade(id){if(!S||S.over||S.phase!=='upgrade'||S.upgradeOffer.indexOf(id)<0)return false;S.upgrades.push(id);S.upgradeOffer=[];S.upgradeRound++;S.nextUpgradeAt=S.t+CONFIG.upgrade.interval;S.phase='play';emit('upgradeChosen',{id:id});return true}
 function newRun(seed,mode,opts){
  opts=opts||{};
  var tut=!!opts.tutorial;
@@ -298,7 +311,7 @@ function newRun(seed,mode,opts){
   for(var i=0;i<tl.events.length;i++)for(var j=0;j<tl.waves.length;j++){if(tl.events[i].t<CONFIG.conflictGuard.untilT&&Math.abs(tl.events[i].t-tl.waves[j].t)<CONFIG.conflictGuard.minSep){tl.events[i].t+=CONFIG.conflictGuard.shift;changed=true}}
  }
  S={phase:'play',mode:mode||'endless',seed:seed,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
- rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
+ rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,upgrades:[],upgradeOffer:[],upgradeRound:0,nextUpgradeAt:CONFIG.upgrade.first,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
  cities:CITIES.map(function(c){return{id:c.id,x:c.x,y:c.y,w:c.w,serveNodeId:null,pending:0}}),
  nodes:[],requests:[],bots:[],slotsTotal:CONFIG.nodes.startSlots,nextUnlockIdx:1,
@@ -309,7 +322,7 @@ function newRun(seed,mode,opts){
 function emit(type,data){if(S)S.events.push(Object.assign({type:type},data||{}))}
 function effConcurrency(){return (S.t<S.originAttackedUntil)?CONFIG.origin.concurrency/2:CONFIG.origin.concurrency}
 function queueWait(){return Math.min(CONFIG.origin.queueMax,Math.max(0,S.originInFlight-effConcurrency())*CONFIG.origin.queuePerExtra)}
-function edgeOneWay(d){return (CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit)*(S.modifier.edge||1)}
+function edgeOneWay(d){return (CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit)*(S.modifier.edge||1)*(hasUpgrade('speed')?0.95:1)}
 function originOneWay(x,y){return CONFIG.origin.baseOneWay+dist(x,y,CONFIG.origin.vx,CONFIG.origin.vy)*CONFIG.origin.perUnit}
 function globalMul(){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='surge')return CONFIG.events.surge.globalMul;if(e.type==='blackfriday')return CONFIG.events.blackfriday.globalMul;if(e.type==='viral')return CONFIG.events.viral.globalMul;return 1}
 function cityMul(ci){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='blackfriday'&&e.cityIdx===ci)return CONFIG.events.blackfriday.cityMul;if(e.type==='viral'&&e.cityIdx===ci)return CONFIG.events.viral.cityMul;return 1}
@@ -324,13 +337,13 @@ function releaseReq(r){if(r.released)return;r.released=true;if(r.nodeId){var n=n
 function assignReq(r,prepend){
  var ci=r.city,c=S.cities[ci];var cost=r.heavy?CONFIG.events.blackfriday.heavyCost:1;
  var best=null,bd=1e9;
- for(var i=0;i<S.nodes.length;i++){var n=S.nodes[i];if(n.state!=='online')continue;if(n.load+cost>CONFIG.nodes.capacity)continue;var d=dist(c.x,c.y,S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);if(d<bd||(d===bd&&best&&n.id<best.id)){bd=d;best=n}}
+ for(var i=0;i<S.nodes.length;i++){var n=S.nodes[i];if(n.state!=='online')continue;if(n.load+cost>CONFIG.nodes.capacity+(hasUpgrade('capacity')?1:0))continue;var d=dist(c.x,c.y,S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);if(d<bd||(d===bd&&best&&n.id<best.id)){bd=d;best=n}}
  r.phases=[];r.nodeId=null;r.route='origin';r.cost=cost;r.originCounted=false;
  if(prepend)r.phases.push({k:'reroute',dur:CONFIG.nodes.reroutePenalty});
  if(best){
   var roll=hash32(S.seed^Math.imul(r.id,0x9E3779B1))/4294967296;
   var hit=roll<best.warmth;
-  best.warmth=Math.min(CONFIG.nodes.warmthMax,best.warmth+CONFIG.nodes.warmthGain*(S.modifier.warmth||1));
+  best.warmth=Math.min(CONFIG.nodes.warmthMax,best.warmth+CONFIG.nodes.warmthGain*(S.modifier.warmth||1)*(hasUpgrade('warmth')?1.1:1));
   best.load+=cost;best.lastAssignT=S.t;r.nodeId=best.id;
   var ow=edgeOneWay(bd);
   if(hit){r.route='hit';r.phases.push({k:'out',dur:ow},{k:'proc',dur:CONFIG.edge.process},{k:'back',dur:ow})}
@@ -346,7 +359,7 @@ function spawnDue(){
   var u=S.rngSpawn();var lam=lambdaAt(S.t);var gap=-Math.log(1-Math.min(0.999999,u))/lam;S.nextArrival+=gap;
   var ci=pickCity();var u2=S.rngSpawn();
   if(S.requests.length>=CONFIG.spawn.maxLiveRequests)continue;
-  var pat=Math.max(CONFIG.patience.min,CONFIG.patience.start-CONFIG.patience.slope*S.t)*(S.modifier.patience||1);
+  var pat=Math.max(CONFIG.patience.min,CONFIG.patience.start-CONFIG.patience.slope*S.t)*(S.modifier.patience||1)*(hasUpgrade('patience')?1.04:1);
   var heavy=!!(S.activeEvent&&S.activeEvent.type==='blackfriday'&&S.activeEvent.cityIdx===ci);
   var r={id:S.nextReqId++,city:ci,spawnT:S.t,patience:pat,heavy:heavy,nodeId:null,route:'origin',phases:[],assignT:S.t,doneAt:0,totalDur:0,done:false,released:false,cost:1,originCounted:false};
   r.golden=(hash32(S.seed^Math.imul(r.id,0x27d4eb2d))/4294967296<CONFIG.golden.chance)&&!S.requests.some(function(q){return q.golden&&!q.done});
@@ -424,7 +437,7 @@ function applySwipe(x1,y1,x2,y2,killR,friendR){
  return kills;
 }
 function stepSim(dt){
- if(!S||S.over)return;
+ if(!S||S.over||S.phase==='upgrade')return;
  S.t+=dt;
  var tl=S.timeline;
  while(tl.evI<tl.events.length&&tl.events[tl.evI].t<=S.t){startEvent(tl.events[tl.evI]);tl.evI++}
@@ -477,7 +490,7 @@ function stepSim(dt){
    if(goldenFast){pts*=CONFIG.golden.fastPoints;S.sla=Math.min(100,S.sla+CONFIG.golden.slaGain)}
    var oldMult=mult;
    if(clutch)S.sla=Math.min(100,S.sla+1);
-   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.modifier.gain||1)*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
+   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.modifier.gain||1)*(hasUpgrade('recovery')?1.15:1)*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
    var newMult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    S.score+=pts;S.served++;S.latencySum+=elapsed;
    if(r.route==='hit'){S.hits++;var hn=nodeById(r.nodeId);if(hn)hn.hitsServed++}else if(r.route==='miss')S.misses++;else S.originServes++;
@@ -485,7 +498,7 @@ function stepSim(dt){
    emit('requestServed',{ms:Math.round(elapsed*CONFIG.msPerSecond),pts:pts,city:r.city,fast:fast,clutch:clutch,golden:goldenFast,route:r.route});
    if(newMult>oldMult)emit('comboUp',{n:S.combo,mult:newMult});
   }else if(S.t-r.spawnT>=r.patience){
-   r.done=true;releaseReq(r);S.sla+=CONFIG.sla.timeout;S.combo=0;S.timeouts++;emit('requestTimeout',{city:r.city});
+   r.done=true;releaseReq(r);S.sla+=CONFIG.sla.timeout*(hasUpgrade('shield')?0.9:1);S.combo=0;S.timeouts++;emit('requestTimeout',{city:r.city});
   }
  }
  S.requests=S.requests.filter(function(r){return !r.done});
@@ -498,6 +511,7 @@ function stepSim(dt){
  S.sla=clamp(S.sla,0,100);
  if(S.tutorial&&S.t<CONFIG.tutorial.slaFloorUntil)S.sla=Math.max(S.sla,CONFIG.tutorial.slaFloor);
  if(S.sla<=0&&!S.over){S.over=true;S.phase='over';S.finalStats={score:S.score,ms:Math.round(S.latencySum/Math.max(1,S.served)*CONFIG.msPerSecond),hitPct:Math.round(S.hits/Math.max(1,S.served)*100),maxCombo:S.maxCombo,sec:S.t,served:S.served,timeouts:S.timeouts};emit('gameOver',S.finalStats)}
+ if(!S.over&&!S.tutorial&&S.upgrades.length<UPGRADES.length&&S.t>=S.nextUpgradeAt)offerUpgrades();
 }
 function useSecondChance(){
  if(!S||!S.over||S.secondChanceUsed)return false;
@@ -505,7 +519,8 @@ function useSecondChance(){
 }
 function applyAction(a){
  if(!S||S.over)return;
- if(a.type==='place')placeNode(a.city);
+ if(a.type==='upgrade')chooseUpgrade(a.id);
+ else if(a.type==='place')placeNode(a.city);
  else if(a.type==='move')moveNode(a.node,a.city);
  else if(a.type==='swipe')applySwipe(a.x1,a.y1,a.x2,a.y2,a.killR,a.friendR);
 }
@@ -608,8 +623,8 @@ function drawDome(c2,x,y,scale,node,tNow){
  c2.restore();
  var warm=node.warmth;var cold=[91,107,154],warmc=[245,196,81];var cc=cold.map(function(v,i){return Math.round(lerp(v,warmc[i],warm))});
  c2.beginPath();c2.arc(x,y-6*scale,20*scale,-Math.PI/2,-Math.PI/2+warm*6.29);c2.strokeStyle='rgb('+cc.join(',')+')';c2.lineWidth=3;c2.stroke();
- var pips=Math.min(4,Math.ceil(node.load));
- for(var p=0;p<4;p++){c2.beginPath();c2.arc(x-9+p*6,y+14*scale,2,0,6.29);c2.fillStyle=p<pips?col:'rgba(138,151,194,0.3)';c2.fill()}
+ var capacity=CONFIG.nodes.capacity+(S&&hasUpgrade('capacity')?1:0),pips=Math.min(capacity,Math.ceil(node.load));
+ for(var p=0;p<capacity;p++){c2.beginPath();c2.arc(x-(capacity-1)*3+p*6,y+14*scale,2,0,6.29);c2.fillStyle=p<pips?col:'rgba(138,151,194,0.3)';c2.fill()}
 }
 function render(tNow){var _ps=S;if(!S&&demo)S=demo;try{renderInner(tNow)}finally{S=_ps}}
 function renderInner(tNow){
@@ -883,6 +898,7 @@ function handleEvents(){
   if(ev.type==='nodePlaced'){/* tutorial advances in tutTick */}
   else if(ev.type==='requestServed'){var sp=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp.x,sp.y-20,ev.clutch?'نجات! +'+toFa(ev.pts):'+'+toFa(ev.pts),ev.clutch?'#F5C451':ev.fast?'#7CF5D8':'#FFA94D');if(ev.golden){floater(sp.x,sp.y-38,'✦ طلایی!','#F5C451');burst(sp.x,sp.y,'#F5C451',10)}if(ev.clutch)AudioSys.tone(740,1100,0.16,'sine',0.12);if(ev.fast){burst(sp.x,sp.y,'#2DD4BF',4);AudioSys.hit(S.combo);if(S.combo%5===0)vibrate(8)}else AudioSys.tick()}
   else if(ev.type==='requestTimeout'){var sp2=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp2.x,sp2.y-20,'!','#FF5C6C');burst(sp2.x,sp2.y,'#FF5C6C',8);AudioSys.timeout();vibrate(30)}
+  else if(ev.type==='upgradeOffer'){var choices=$('upgradeChoices');choices.textContent='';S.upgradeOffer.forEach(function(id){var u=UPGRADES.find(function(x){return x.id===id}),button=document.createElement('button');button.className='btn';button.textContent=u.name+' — '+u.desc;button.addEventListener('click',function(){if(chooseUpgrade(id)){showOverlay(null);banner('✨ '+u.name,'good')}});choices.appendChild(button)});showOverlay('ovUpgrade')}
   else if(ev.type==='turboStart'){banner('⚡ توربو!','gold');AudioSys.fanfare()}
   else if(ev.type==='comboUp'){banner('🔥 کمبو ×'+toFa(ev.mult.toFixed(1)),'gold');AudioSys.comboUp(S.combo);vibrate(20)}
   else if(ev.type==='botKilled'){var bp=w2s(ev.x,ev.y);shieldBurst(bp.x,bp.y);floater(bp.x,bp.y,'+'+toFa(CONFIG.score.botKill),'#FF5C6C');AudioSys.zap();vibrate(8)}
@@ -964,7 +980,7 @@ function loopBody(ts){
  var dt=Math.min(0.1,(ts-lastT)/1000||0.016);lastT=ts;
  fpsN++;fpsT+=dt;if(fpsT>=0.5){fps=Math.round(fpsN/fpsT);fpsN=0;fpsT=0}
  var t0=performance.now();
- if(S&&S.phase==='play'){acc+=dt;var steps=0;while(acc>=CONFIG.DT&&steps<CONFIG.maxStepsPerFrame){stepSim(CONFIG.DT);acc-=CONFIG.DT;steps++}if(steps===CONFIG.maxStepsPerFrame)acc=0;handleEvents();updateHUD();
+ if(S&&S.phase==='play'){acc+=dt;var steps=0;while(acc>=CONFIG.DT&&steps<CONFIG.maxStepsPerFrame&&S.phase==='play'){stepSim(CONFIG.DT);acc-=CONFIG.DT;steps++}if(steps===CONFIG.maxStepsPerFrame)acc=0;handleEvents();updateHUD();
   if(S.tutorial)tutTick();
   if(S.sla<CONFIG.sla.lowThreshold){heartT-=dt;if(heartT<=0){AudioSys.heartbeat();heartT=0.9}}
  }else if(!S){stepDemo(dt)}
@@ -1024,7 +1040,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier,useSecondChance:useSecondChance,chooseUpgrade:chooseUpgrade};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

@@ -138,6 +138,7 @@ function runBot(seed, policy, maxT, dailyDate) {
   const tick = makePolicy(policy, S, seed * 7919 + 17);
   let t = 0;
   while (!S.over && t < (maxT || 600)) {
+    if(S.phase==='upgrade')G.chooseUpgrade(S.upgradeOffer[0]);
     tick();
     G.step(DT); t += DT;
     if (S.sla < 0 || S.sla > 100) throw new Error('SLA out of range ' + S.sla);
@@ -147,7 +148,7 @@ function runBot(seed, policy, maxT, dailyDate) {
       if (n && n.state !== 'online') throw new Error('invariant: live request on non-online node');
     }
   }
-  return { t: S.t, score: S.score };
+  return { t: S.t, score: S.score, upgrades: S.upgrades.slice() };
 }
 
 /* ---------- tests ---------- */
