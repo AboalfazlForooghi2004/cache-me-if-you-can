@@ -150,8 +150,6 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
   <button class="btn ghost" id="btnOnlineBoard">🌐 جدول آنلاین امروز</button>
-  <button class="btn ghost" id="btnDailyBoard">📅 جدول شخصی امروز</button>
-  <button class="btn ghost" id="btnLocalBoard">🏆 جدول شخصی</button>
   <button class="btn ghost" id="btnHow">❓ چطور بازی کنم؟</button>
   <div class="menurow">
     <button class="iconbtn" id="btnSound" aria-label="sound">🔊</button>
@@ -163,12 +161,6 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
 <div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر پنج‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
 <div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="sub" id="dailyStartMessage" role="status"></div><div class="tip" id="dailyMissionsIntro"></div><div class="tip">رکورد شخصی روی همین دستگاه ذخیره می‌شود. ثبت آنلاین اختیاری است و فقط در صورت پشتیبانی سرور کار می‌کند؛ بررسی آن تقریبی است، نه بازپخش.</div><label><input type="checkbox" id="onlineConsent"> ارسال نام مستعار و آمار بازی برای جدول آنلاین</label><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
 <div class="overlay" id="ovOnlineBoard"><div class="card"><h2 id="onlineBoardTitle">🌐 جدول آنلاین امروز</h2><div class="sub">در صورت اتصال؛ بررسی LITE تقریبی است و بازپخش را تأیید نمی‌کند.</div><div id="onlineBoardRows"></div><button class="btn primary" id="btnOnlineBack">برگرد</button></div></div>
-<div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="tip" id="dailyMissionResults"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
-<div class="overlay" id="ovLocalBoard"><div class="card">
-  <h2>🏆 جدول شخصی</h2><div class="sub">فقط روی همین دستگاه ذخیره می‌شود؛ جدول سراسری نیست.</div>
-  <div id="localBoardRows"></div>
-  <button class="btn primary" id="btnLocalBack">برگرد</button>
-</div></div>
 <div class="overlay" id="ovHow"><div class="card">
   <h2>چطور بازی کنم؟</h2>
   <div class="howcards">
@@ -285,9 +277,10 @@ function normalizeNickname(value){
  return n;
 }
 function displayNickname(value){return normalizeNickname(value)||'ناشناس'}
-function defaultData(){return{settings:{sound:true,music:true,haptics:true,reducedMotion:null,lang:'fa'},best:0,top:[],daily:{},tutorialSeen:false,runs:0}}
+function defaultData(){return{settings:{sound:true,music:true,haptics:true,reducedMotion:null,lang:'fa'},best:0,daily:{},tutorialSeen:false,runs:0}}
 let DB=defaultData();try{var _d=Store.load();if(_d&&_d.settings)DB=_d}catch(e){}
 function saveDB(){try{Store.save(DB)}catch(e){}}
+if(DB.top){delete DB.top}if(DB.daily)Object.keys(DB.daily).forEach(function(k){if(DB.daily[k]&&DB.daily[k].top)delete DB.daily[k].top});saveDB();
 function tehranDate(){try{var q=new URLSearchParams(location.search);var dd=q.get('daily');if(dd&&/^\d{8}$/.test(dd))return dd;var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());var get=function(k){return parts.find(function(p){return p.type===k}).value};return get('year')+get('month')+get('day')}catch(e){return '20261130'}}
 function jalaliLabel(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(new Date())}catch(e){return ''}}
 /* ================= SIM ================= */
@@ -921,8 +914,8 @@ function gameOverUI(){
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
- DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.challengeToken?'challenge':S.mode,date:S.dailyDate,name:displayNickname(DB.nickname)});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
- if(S.mode==='daily'&&!S.challengeToken){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true});if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now(),name:displayNickname(DB.nickname)});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
+ DB.runs++;
+ if(S.mode==='daily'&&!S.challengeToken){var dd=S.dailyDate;DB.dailyStreak=advanceStreak(DB.dailyStreak,dd);if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!DB.daily[dd].missions||typeof DB.daily[dd].missions!=='object')DB.daily[dd].missions={};missionsFor(dd).forEach(function(m){if(missionMet(m,f))DB.daily[dd].missions[m.id]=true})}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  setText('onlineStatus',S.onlineTicket?'در حال ارسال امتیاز...':'امتیاز فقط محلی است.');$('btnChallengeLink').style.display=S.challengeMakerTicket?'block':'none';
@@ -1066,7 +1059,7 @@ async function startDaily(){
  }catch(e){if(activeChallenge){setText('dailyStartMessage','چالش در دسترس نیست یا منقضی شده است.');return}}finally{dailyStarting=false}
  startRun('daily',undefined,false);if($('onlineConsent').checked)banner('سرور در دسترس نیست؛ بازی محلی','warn');
 }
-$('btnDaily').addEventListener('click',function(){activeChallenge=null;setText('dailyStartMessage','');var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);setText('dailyMissionsIntro','ماموریت‌های شخصی امروز (هرکدام در یک بازی): '+missionsFor(tehranDate()).map(function(x){return x.name}).join(' · '));showOverlay('ovDailyIntro')});
+$('btnDaily').addEventListener('click',function(){activeChallenge=null;setText('dailyStartMessage','');var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);var dd=tehranDate(),completed=DB.daily[dd]&&DB.daily[dd].missions||{};setText('dailyMissionsIntro','آخرین رشته: '+toFa(DB.dailyStreak&&DB.dailyStreak.count||0)+' روز · ماموریت‌های امروز: '+missionsFor(dd).map(function(x){return (completed[x.id]?'✓ ':'○ ')+x.name}).join(' · '));showOverlay('ovDailyIntro')});
 $('btnFriendChallenge').addEventListener('click',function(){activeChallenge=challengeParam;setText('dailyIntro','چالش دوستانه — تاریخ و قوانین پس از تأیید سرور مشخص می‌شود.');setText('dailyMissionsIntro','این بازی در جدول چالش جدا ثبت می‌شود.');setText('dailyStartMessage','');showOverlay('ovDailyIntro')});
 $('btnDailyStart').addEventListener('click',startDaily);
 $('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
@@ -1074,17 +1067,6 @@ async function openOnlineBoard(challenge){setText('onlineBoardTitle',challenge?'
 $('btnOnlineBoard').addEventListener('click',function(){openOnlineBoard(null)});
 $('btnFriendBoard').addEventListener('click',function(){openOnlineBoard(challengeParam)});
 $('btnOnlineBack').addEventListener('click',function(){showOverlay('ovMenu')});
-$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var completed=DB.daily[dd]&&DB.daily[dd].missions||{};setText('dailyMissionResults','آخرین رشتهٔ بازی: '+toFa(DB.dailyStreak&&DB.dailyStreak.count||0)+' روز'+(DB.dailyStreak&&DB.dailyStreak.date?' (تا '+toFa(DB.dailyStreak.date)+')':'')+' · '+missionsFor(dd).map(function(x){return (completed[x.id]?'✓ ':'○ ')+x.name}).join(' · '));var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
-$('btnDailyBoardBack').addEventListener('click',function(){showOverlay('ovMenu')});
-$('btnLocalBoard').addEventListener('click',function(){
- var rows=$('localBoardRows');rows.textContent='';var list=(Array.isArray(DB.top)?DB.top:[]).slice(0,10);
- if(!list.length){rows.textContent='هنوز رکوردی ثبت نشده.'}
- list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';
- var rank=document.createElement('span');rank.textContent=toFa(i+1)+' · '+displayNickname(r.name)+' · '+rankFor(Number(r.score)||0)[1];
- var value=document.createElement('span');value.textContent=toFa(Number(r.score)||0);row.appendChild(rank);row.appendChild(value);rows.appendChild(row)});
- showOverlay('ovLocalBoard');
-});
-$('btnLocalBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnHow').addEventListener('click',function(){showOverlay('ovHow')});
 $('btnHowBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnHowGo').addEventListener('click',function(){showOverlay('ovMenu');startRun('endless')});

@@ -117,3 +117,6 @@ screen and clutch-save scoring were added. This is not a validated-score or glob
 release. Public store and validation modes remain `NONE`; experimental private builds are unverified on Arvan.
 The thumbnail and OG asset are in `assets/`; no claim is made that the missing V2
 features or contest compliance have passed QA.
+
+### Current delivery change
+Personal leaderboard screens have been removed. Best score and local daily missions/streak remain; the only leaderboard being developed is the online daily board. Earlier historical descriptions of a personal board above are superseded.
