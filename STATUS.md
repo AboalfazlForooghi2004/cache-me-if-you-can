@@ -159,3 +159,6 @@ This is bot-harness calibration, not human testing; the lazy policy already wins
 
 ### Share follow-up after Stage 3
 Added six distinct upgrade glyphs; `tests/share_card.js` exercises all modes with a mock canvas and a long Persian nickname, and checks the text template. `tests/share_logic.py` now also tests unsupported image download, in addition to native-share mock, cancellation, and text-copy fallback. All three sample cards and the three viewport sets were refreshed; `node tests/run_all.js` remains green. This supersedes the mock-canvas and upgrade-glyph limitations in Stage 2 above. Still not verified: <300ms on a real phone, iOS native share behavior, rigorous text-wrap/overlap for every possible field, and actual Arvan.
+
+### Rank-display correction
+The share card no longer treats the displayed top-50 count as the true total; the optional “rank out of total” card line is omitted unless a real total is available. A known own result outside the top 50 is appended as a highlighted row with its separately computed/capped rank. The unfiltered-key and eventual-consistency caveats for that rank still apply. Node suite and mocked online/share visual tests pass; the outside-top-50 UI branch itself has not been exercised on Arvan.
