@@ -1,0 +1,5 @@
+'use strict';const assert=require('assert'),{G,runBot}=require('./balance_harness'),{plausibleRun}=require('../worker/src/lite_validation');
+function check(seed,policy,date){runBot(seed,policy,600,date);let s=G.state,ticket={kind:'start',seed,iat:100000-Math.ceil(s.t)};let run={seed,score:s.score,served:s.served,fastCount:s.fastCount,maxCombo:s.maxCombo,timeouts:s.timeouts,duration:s.t};assert(plausibleRun(run,ticket,100000),policy+' seed '+seed+' date '+date+' valid simulated run rejected')}
+for(const policy of ['lazy','novice','human','expert','greedy'])for(let i=1;i<=10;i++)check(i*777+13,policy);
+const dates={};for(let i=1;i<=30;i++){let d='202611'+String(i).padStart(2,'0');dates[G.dailyModifier(d).id]??=d}assert.equal(Object.keys(dates).length,8);for(const d of Object.values(dates))for(const p of ['human','expert','greedy'])for(let i=1;i<=3;i++)check(i*777+13,p,d);
+console.log('PASS LITE plausibility calibration: 50 ordinary and 72 modifier simulations (not proof against forgery)');

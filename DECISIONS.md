@@ -158,3 +158,6 @@ The target 390×844 outline footprint (at least 90% width and 62% height) requir
 
 ## Continuation — presentation polish
 A quiet, procedural WebAudio background adjusts its tempo and notes for waves/low SLA, with independent music setting, global mute and pause handling. Request packets render short reduced-motion-aware trails. Headless and browser smoke tests cover switching behavior; no real-device FPS or sound-quality evaluation has been performed.
+
+## Continuation — diagnostics and calibration
+Private diagnostics provide safe capability probes and a local fallback SHA/HMAC known-answer check without contacting storage or exposing credentials. Trust, S3 ordering and conditional writes remain unverified. Additional LITE tests exercise 122 ordinary/modifier bot runs; they do not establish fairness or prevent plausible fabricated results.
