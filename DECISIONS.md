@@ -155,3 +155,6 @@ Daily online submission requires explicit consent and a successful same-origin s
 
 ## Continuation — tall portrait map
 The target 390×844 outline footprint (at least 90% width and 62% height) requires nonuniform vertical scaling within this portrait viewport; screenshot and geometry assertion record the deliberate stylized distortion. Pointer swipe hit tests use screen-pixel distance, preserving the intended physical radius; explicit simulated radii remain world-space. Labels avoid known city/face/node/portal boxes when possible, but no guarantee is made for crowded frames.
+
+## Continuation — presentation polish
+A quiet, procedural WebAudio background adjusts its tempo and notes for waves/low SLA, with independent music setting, global mute and pause handling. Request packets render short reduced-motion-aware trails. Headless and browser smoke tests cover switching behavior; no real-device FPS or sound-quality evaluation has been performed.

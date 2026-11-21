@@ -98,7 +98,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 - Politics / sexual / ethnic / religious / gender insults: full content review pending.
 - Ads and analytics: no advertising or analytics code is intentionally included; independent audit pending.
 - Personal data: no server-side identity collection currently implemented. The client stores local records; formal privacy review pending before any ranking features.
-- Free text: existing share fallback contains a read-only selectable textarea, not a player-submission field. Full interface audit pending.
+- Free text: optional locally validated nickname; the experimental opt-in online path sends it when configured. Moderation and privacy review are still required.
 - Fake traffic / cheating: no traffic generation against an Arvan deployment was performed; replay validation is **not implemented**.
 - Assets: procedural game artwork and sound; bundled Vazirmatn font under OFL (see license); external rights/contest compliance review pending.
 - Platform: **UNVERIFIED ON ARVAN**. See `PLATFORM_FINDINGS.md`, `DEPLOY_LOG.md` and `DEPLOY_MANUAL.md`.
@@ -106,9 +106,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 ## Current V2 build slice
 
 Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
-`src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`
- `dist/worker.lite.js` (without OG image), and `output/` copies. Both workers remain store NONE / validation NONE. Shared simulation extraction, replay validation and private S3
-builds are **not implemented**. The build refuses secret/storage environment variables.
+`src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`, `dist/worker.lite.js` (without OG image), and `output/` copies. Public workers remain store NONE / validation NONE. Shared simulation extraction and replay validation are **not implemented**. An explicit environment-configured experimental private build is mock-tested only; see `OWNER_TODO.md`.
 `/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
 replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.
 
@@ -116,6 +114,6 @@ replace the existing live game with this unfinished prototype; see `OWNER_TODO.m
 
 `STATUS.md` is the authoritative implementation and cut list. A **local-only** top-10
 screen and clutch-save scoring were added. This is not a validated-score or global-board
-release. The store and validation modes remain `NONE`, and secret builds fail closed.
+release. Public store and validation modes remain `NONE`; experimental private builds are unverified on Arvan.
 The thumbnail and OG asset are in `assets/`; no claim is made that the missing V2
 features or contest compliance have passed QA.

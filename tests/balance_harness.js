@@ -27,7 +27,7 @@ function fakeCtx() {
 function fakeEl() {
   return {
     style: {}, classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
-    addEventListener() {}, getContext: () => fakeCtx(),
+    addEventListener() {}, setAttribute() {}, getContext: () => fakeCtx(),
     getBoundingClientRect: () => ({ left: 0, top: 0 }),
     querySelectorAll: () => [], createElement: () => fakeEl(), appendChild() {},
     textContent: '', value: '', className: '', offsetWidth: 0, offsetHeight: 0
