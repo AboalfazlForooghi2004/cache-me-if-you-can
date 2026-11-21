@@ -102,3 +102,12 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 - Fake traffic / cheating: no traffic generation against an Arvan deployment was performed; replay validation is **not implemented**.
 - Assets: procedural game artwork and sound; bundled Vazirmatn font under OFL (see license); external rights/contest compliance review pending.
 - Platform: **UNVERIFIED ON ARVAN**. See `PLATFORM_FINDINGS.md`, `DEPLOY_LOG.md` and `DEPLOY_MANUAL.md`.
+
+## Current V2 build slice
+
+Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
+`src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`
+and `output/` copies. Shared simulation extraction, replay validation and private S3
+builds are **not implemented**. The build refuses secret/storage environment variables.
+`/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
+replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.

@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),{spawnSync}=require('child_process');
+assert.equal(fs.readFileSync('src/index.html','utf8'),fs.readFileSync('index.html','utf8'));
+assert.equal(fs.readFileSync('dist/index.html','utf8'),fs.readFileSync('index.html','utf8'));
+assert.equal(fs.readFileSync('dist/worker.js','utf8'),fs.readFileSync('worker/dist/worker.js','utf8'));
+const env={...process.env,WORKER_SECRET:'test-only-secret-not-for-production'};
+const p=spawnSync(process.execPath,['build.js'],{env,encoding:'utf8'});
+assert.notEqual(p.status,0,'private configuration must fail closed');
+assert(!fs.readFileSync('dist/worker.js','utf8').includes(env.WORKER_SECRET),'secret leaked in public bundle');
+console.log('PASS reproducible artifacts and fail-closed private configuration');

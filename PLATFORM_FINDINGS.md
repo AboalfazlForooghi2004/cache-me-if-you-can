@@ -10,3 +10,11 @@ Research only, **UNVERIFIED ON ARVAN** unless explicitly marked otherwise. No pr
 * Runtime CPU, bundle/body limits, capabilities, headers, timezone data, cold/warm latency, secrets bindings and live behavior remain **UNVERIFIED ON ARVAN**. No probe was deployed. An Edge environment-variable management endpoint appears in the [Edge API spec](https://www.arvancloud.ir/api-docs/ec-1.0.yaml), but runtime access semantics are unverified.
 
 **Tier:** target TIER 0 first; current build is a *partial bootstrap*, not TIER 0 (no replay validation, signed challenges or AI report). Rankings are absent, not faked. The local `/api/daily` calculates a Tehran-date seed; `simVersion:null` and `verificationAvailable:false` explicitly flag that scoring is not verified. This endpoint itself is **UNVERIFIED ON ARVAN**.
+
+## V2 current diagnostic (local only)
+`/__diag` now has isolated feature/clock/Tehran/WebCrypto probes and returns explicit
+`not implemented`/`not configured` for sim benchmarking, outbound/store and LIST ordering.
+Validation mode and store are `NONE`; no secret is included. A catch around the request
+handler returns a JSON 500 for caught exceptions. This route has not been run on Arvan,
+and a zero timer delta is not by itself proof that a clock is frozen. The real platform's
+capabilities, limits, and behavior remain **UNVERIFIED ON ARVAN**.

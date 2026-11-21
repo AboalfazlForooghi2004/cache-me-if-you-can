@@ -11,3 +11,6 @@ credentials*
 .arvanconfig
 config.local.*
 node_modules/
+private/
+private_dist/
+output/
