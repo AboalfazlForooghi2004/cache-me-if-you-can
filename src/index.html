@@ -148,7 +148,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="bestchip" id="menuBest">🏆 بهترین رکورد: ۰</div>
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
   <button class="btn" id="btnFriendChallenge" style="display:none">🔗 بازی چالش دوستانه</button><button class="btn ghost" id="btnFriendBoard" style="display:none">🏆 جدول چالش دوستانه</button>
-  <button class="btn" id="btnCampaign">🗺 مسیر پنج‌مرحله‌ای</button>
+  <button class="btn" id="btnCampaign">🗺 مسیر هشت‌مرحله‌ای</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
   <button class="btn ghost" id="btnOnlineBoard" style="display:none">🌐 جدول آنلاین امروز</button>
@@ -160,7 +160,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="footer">ساخته‌شده برای مسابقه بازی‌سازی آروان‌کلاد · <span dir="ltr">#GameOnEdge</span></div>
 </div></div>
 
-<div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر پنج‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
+<div class="overlay" id="ovCampaign"><div class="card"><h2>🗺 مسیر هشت‌مرحله‌ای</h2><div class="sub">تا پایان زمان هر مرحله شبکه را فعال نگه دار.</div><div id="campaignChoices"></div><button class="btn ghost" id="btnCampaignBack">برگرد</button></div></div>
 <div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="sub" id="dailyStartMessage" role="status"></div><div class="tip" id="dailyMissionsIntro"></div><div id="onlineOptions" class="tip" style="display:none">فقط اسم مستعار و امتیازت برای جدول ثبت می‌شه؛ آمار فنی دور هم برای بررسی ارسال می‌شه.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
 <div class="overlay" id="ovOnlineBoard"><div class="card"><h2 id="onlineBoardTitle">🌐 جدول آنلاین امروز</h2><div class="sub" id="onlineRank"></div><div id="onlineBoardRows" class="boardlist"></div><button class="btn ghost" id="btnBoardRetry" style="display:none">تلاش دوباره</button><button class="btn primary" id="btnOnlineBack">برگرد</button></div></div>
 <div class="overlay" id="ovHow"><div class="card">
@@ -312,7 +312,10 @@ const CAMPAIGN=[
  {name:'شهرهای بیشتر',seconds:60,spawn:0.9},
  {name:'مسیرهای شلوغ',seconds:75,spawn:0.95},
  {name:'آزمون لبه',seconds:90,spawn:1},
- {name:'شبکه سراسری',seconds:105,spawn:1.05}
+ {name:'شبکه سراسری',seconds:105,spawn:1.05},
+ {name:'بلیط فینال',seconds:120,spawn:1.10,story:'بسته‌های سنگین و موج شهرهای کوچک؛ حداکثر چهار نود.'},
+ {name:'سال تحویل',seconds:135,spawn:1.15,story:'همه برای لحظه‌ای شاد آنلاین می‌شوند؛ پایان شلوغ‌تر است.'},
+ {name:'غول ترافیک',seconds:150,spawn:1.20,story:'بسته‌های بزرگ را با سه حرکت جداگانه فیلتر کن.'}
 ];
 const UPGRADES=[
  {id:'capacity',name:'ظرفیت بیشتر',desc:'ظرفیت هر نود یک واحد بیشتر'},
@@ -339,7 +342,8 @@ function newRun(seed,mode,opts){
  while(changed&&guardPass<60){changed=false;guardPass++;
   for(var i=0;i<tl.events.length;i++)for(var j=0;j<tl.waves.length;j++){if(tl.events[i].t<CONFIG.conflictGuard.untilT&&Math.abs(tl.events[i].t-tl.waves[j].t)<CONFIG.conflictGuard.minSep){tl.events[i].t+=CONFIG.conflictGuard.shift;changed=true}}
  }
- var level=mode==='campaign'?Math.max(0,Math.min(4,Number(opts.campaignLevel)||0)):null;
+ var level=mode==='campaign'?Math.max(0,Math.min(7,Number(opts.campaignLevel)||0)):null;
+ if(level===5){tl.events=[];for(var et=20;et<120;et+=20)tl.events.push({t:et,type:'viral',u:rngTl()})}if(level===6){tl.waves=[];for(var wt=25,wk=1;wt<135;wt+=25,wk++)tl.waves.push({t:wt,k:wk,boss:wk%3===0})}
  S={phase:'play',mode:mode||'endless',seed:seed,campaignLevel:level,won:false,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):mode==='campaign'?CAMPAIGN[level]:{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
  rngSpawn:rngSpawn,rngTl:rngTl,turboCount:0,goldenCount:0,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,secondChanceUsed:false,upgrades:[],upgradeOffer:[],upgradeRound:0,nextUpgradeAt:CONFIG.upgrade.first,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
@@ -356,7 +360,7 @@ function edgeOneWay(d){return (CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit)*(S.
 function originOneWay(x,y){return CONFIG.origin.baseOneWay+dist(x,y,CONFIG.origin.vx,CONFIG.origin.vy)*CONFIG.origin.perUnit}
 function globalMul(){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='surge')return CONFIG.events.surge.globalMul;if(e.type==='blackfriday')return CONFIG.events.blackfriday.globalMul;if(e.type==='viral')return CONFIG.events.viral.globalMul;return 1}
 function cityMul(ci){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='blackfriday'&&e.cityIdx===ci)return CONFIG.events.blackfriday.cityMul;if(e.type==='viral'&&e.cityIdx===ci)return CONFIG.events.viral.cityMul;return 1}
-function lambdaAt(t){var l=(Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)+Math.min(CONFIG.spawn.lateExtraMax,Math.max(0,t-CONFIG.spawn.lateStart)*CONFIG.spawn.lateSlope))*globalMul()*(S.modifier.spawn||1);if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
+function lambdaAt(t){var campaignSurge=S.mode==='campaign'&&S.campaignLevel===6?(t>=110?2.2:1+0.002*t):1;var l=campaignSurge*(Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)+Math.min(CONFIG.spawn.lateExtraMax,Math.max(0,t-CONFIG.spawn.lateStart)*CONFIG.spawn.lateSlope))*globalMul()*(S.modifier.spawn||1);if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
 function pickCity(){var u=S.rngSpawn();var total=0,i;var idxs=[];
  if(S.tutorial&&S.t<CONFIG.tutorial.slowStartUntil){idxs=[0,2,1]}else{for(i=0;i<S.cities.length;i++)idxs.push(i)}
  for(i=0;i<idxs.length;i++)total+=S.cities[idxs[i]].w*cityMul(idxs[i]);
@@ -367,7 +371,7 @@ function releaseReq(r){if(r.released)return;r.released=true;if(r.nodeId){var n=n
 function assignReq(r,prepend){
  var ci=r.city,c=S.cities[ci];var cost=r.heavy?CONFIG.events.blackfriday.heavyCost:1;
  var best=null,bd=1e9;
- for(var i=0;i<S.nodes.length;i++){var n=S.nodes[i];if(n.state!=='online')continue;if(n.load+cost>CONFIG.nodes.capacity+(hasUpgrade('capacity')?1:0))continue;var d=dist(c.x,c.y,S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);if(d<bd||(d===bd&&best&&n.id<best.id)){bd=d;best=n}}
+ for(var i=0;i<S.nodes.length;i++){var n=S.nodes[i];if(n.state!=='online')continue;if(n.load+cost>CONFIG.nodes.capacity+(hasUpgrade('capacity')?1:0)+(S.mode==='campaign'&&S.campaignLevel===5?4:S.mode==='campaign'&&S.campaignLevel===6?7:S.mode==='campaign'&&S.campaignLevel===7?3:0))continue;var d=dist(c.x,c.y,S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);if(d<bd||(d===bd&&best&&n.id<best.id)){bd=d;best=n}}
  r.phases=[];r.nodeId=null;r.route='origin';r.cost=cost;r.originCounted=false;
  if(prepend)r.phases.push({k:'reroute',dur:CONFIG.nodes.reroutePenalty});
  if(best){
@@ -390,7 +394,7 @@ function spawnDue(){
   var ci=pickCity();var u2=S.rngSpawn();
   if(S.requests.length>=CONFIG.spawn.maxLiveRequests)continue;
   var pat=Math.max(CONFIG.patience.min,CONFIG.patience.start-CONFIG.patience.slope*S.t)*(S.modifier.patience||1)*(hasUpgrade('patience')?1.04:1);
-  var heavy=!!(S.activeEvent&&S.activeEvent.type==='blackfriday'&&S.activeEvent.cityIdx===ci);
+  var heavy=!!(S.activeEvent&&S.activeEvent.type==='blackfriday'&&S.activeEvent.cityIdx===ci)||(S.mode==='campaign'&&S.campaignLevel===5&&hash32(S.seed^Math.imul(S.nextReqId,0x1234abcd))/4294967296<0.25);
   var r={id:S.nextReqId++,city:ci,spawnT:S.t,patience:pat,heavy:heavy,nodeId:null,route:'origin',phases:[],assignT:S.t,doneAt:0,totalDur:0,done:false,released:false,cost:1,originCounted:false};
   r.golden=(hash32(S.seed^Math.imul(r.id,0x27d4eb2d))/4294967296<CONFIG.golden.chance)&&!S.requests.some(function(q){return q.golden&&!q.done});
   assignReq(r,false);S.requests.push(r);
@@ -442,23 +446,23 @@ function spawnBot(){
  var u=rng();var p=outlinePoint(u);
  var tgt=nearestOnlineNode(p.x,p.y);
  var speed=CONFIG.bots.baseSpeed*(aw.boss?CONFIG.bots.bossSpeedMul:1)*(0.9+rng()*0.2);
- S.bots.push({id:S.nextBotId++,x:p.x,y:p.y,targetNodeId:tgt?tgt.id:0,speed:speed,alive:true,rot:rng()*6.28});
+ var mega=S.mode==='campaign'&&S.campaignLevel===7&&aw.spawned<(1+hash32(S.seed^aw.k)%3);S.bots.push({id:S.nextBotId++,x:p.x,y:p.y,targetNodeId:tgt?tgt.id:0,speed:speed,alive:true,rot:rng()*6.28,mega:mega,hitsLeft:mega?3:1,lastHit:-1});
  aw.spawned++;
 }
 function killBot(b){b.alive=false;S.score+=CONFIG.score.botKill;if(S.activeWave)S.activeWave.botsKilled++;emit('botKilled',{x:b.x,y:b.y})}
 function leakBot(b){
  b.alive=false;
  if(S.activeWave)S.activeWave.botsLeaked++;
- S.sla+=CONFIG.sla.botLeak*(S.modifier.leak||1);
- if(b.targetNodeId){var n=nodeById(b.targetNodeId);if(n&&n.state==='online'){n.state='attacked';n.untilT=S.t+CONFIG.bots.attackSec;rerouteNode(n.id);n.load=0;emit('nodeAttacked',{node:n.id})}}
- else{S.originAttackedUntil=S.t+CONFIG.bots.attackSec}
+ S.sla+=CONFIG.sla.botLeak*(S.modifier.leak||1)*(S.mode==='campaign'&&S.campaignLevel===5?0.55:S.mode==='campaign'&&S.campaignLevel===6?0.3:S.mode==='campaign'&&S.campaignLevel===7?0.4:1);
+ if(b.targetNodeId){var n=nodeById(b.targetNodeId);if(n&&n.state==='online'){n.state='attacked';n.untilT=S.t+CONFIG.bots.attackSec*(b.mega?2:1);rerouteNode(n.id);n.load=0;emit('nodeAttacked',{node:n.id})}}
+ else{S.originAttackedUntil=S.t+CONFIG.bots.attackSec*(b.mega?2:1)}
  emit('botLeaked',{x:b.x,y:b.y});
 }
-function applySwipe(x1,y1,x2,y2,killR,friendR){
+function applySwipe(x1,y1,x2,y2,killR,friendR,gesture){
  var kr=killR!=null?killR:CONFIG.bots.killRadiusPx;
  var fr=friendR!=null?friendR:CONFIG.bots.friendlyRadiusPx;
  var p1=w2s(x1,y1),p2=w2s(x2,y2),kills=0;
- for(var i=0;i<S.bots.length;i++){var b=S.bots[i];if(!b.alive)continue;var bp=killR==null?w2s(b.x,b.y):b;var kd=killR==null?segDist(bp.x,bp.y,p1.x,p1.y,p2.x,p2.y):segDist(bp.x,bp.y,x1,y1,x2,y2);if(kd<=kr){killBot(b);kills++}}
+ for(var i=0;i<S.bots.length;i++){var b=S.bots[i];if(!b.alive)continue;var bp=killR==null?w2s(b.x,b.y):b;var kd=killR==null?segDist(bp.x,bp.y,p1.x,p1.y,p2.x,p2.y):segDist(bp.x,bp.y,x1,y1,x2,y2);if(kd<=kr){if(b.mega&&gesture!=null&&b.lastGesture===gesture)continue;if(b.mega&&b.hitsLeft>1){if(b.lastHit<0||S.t-b.lastHit>=0.15-1e-9){b.hitsLeft--;b.lastHit=S.t;b.lastGesture=gesture;emit('megaPulse',{x:b.x,y:b.y})}}else if(!b.mega||b.lastHit<0||S.t-b.lastHit>=0.15-1e-9){killBot(b);kills++}}}
  var waveActive=S.activeWave&&(S.t>=S.activeWave.startT);
  if(waveActive){
   for(var j=0;j<S.cities.length;j++){var c=S.cities[j];var cd=S.friendlyCd[j]||0;if(S.t<cd)continue;
@@ -473,7 +477,7 @@ function stepSim(dt){
  while(tl.evI<tl.events.length&&tl.events[tl.evI].t<=S.t){startEvent(tl.events[tl.evI]);tl.evI++}
  while(tl.waveI<tl.waves.length&&tl.waves[tl.waveI].t<=S.t){startWave(tl.waves[tl.waveI]);tl.waveI++}
  if(S.activeEvent&&S.t>=S.activeEvent.endT){emit('eventEnd',{etype:S.activeEvent.type});S.activeEvent=null}
- for(var ui=0;ui<CONFIG.nodes.unlockAt.length;ui++){var un=CONFIG.nodes.unlockAt[ui];if(S.t>=un[0]&&S.slotsTotal<un[1]){S.slotsTotal=un[1];emit('slotUnlocked',{slots:un[1]})}}
+ for(var ui=0;ui<CONFIG.nodes.unlockAt.length;ui++){var un=CONFIG.nodes.unlockAt[ui];if(S.t>=un[0]&&S.slotsTotal<un[1]&&!(S.mode==='campaign'&&S.campaignLevel===5&&un[1]>4)){S.slotsTotal=un[1];emit('slotUnlocked',{slots:un[1]})}}
  spawnDue();
  for(var ni=0;ni<S.nodes.length;ni++){var n=S.nodes[ni];
   if((n.state==='relocating'||n.state==='offline'||n.state==='attacked')&&S.t>=n.untilT){
@@ -528,7 +532,7 @@ function stepSim(dt){
    emit('requestServed',{ms:Math.round(elapsed*CONFIG.msPerSecond),pts:pts,city:r.city,fast:fast,clutch:clutch,golden:goldenFast,route:r.route});
    if(newMult>oldMult)emit('comboUp',{n:S.combo,mult:newMult});
   }else if(S.t-r.spawnT>=r.patience){
-   r.done=true;releaseReq(r);S.sla+=CONFIG.sla.timeout*(hasUpgrade('shield')?0.9:1);S.combo=0;S.timeouts++;emit('requestTimeout',{city:r.city});
+   r.done=true;releaseReq(r);S.sla+=CONFIG.sla.timeout*(hasUpgrade('shield')?0.9:1)*(S.mode==='campaign'&&S.campaignLevel===5?0.55:S.mode==='campaign'&&S.campaignLevel===6?0.3:S.mode==='campaign'&&S.campaignLevel===7?0.4:1);S.combo=0;S.timeouts++;emit('requestTimeout',{city:r.city});
   }
  }
  S.requests=S.requests.filter(function(r){return !r.done});
@@ -712,7 +716,7 @@ function renderInner(tNow){
  if(dragNode||selectedNode){for(var ec=0;ec<S.cities.length;ec++){if(cityHasNode(ec))continue;var ep=w2s(S.cities[ec].x,S.cities[ec].y);var pa=0.35+0.3*Math.sin(tNow*5+ec);ctx.strokeStyle='rgba(45,212,191,'+pa.toFixed(2)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ep.x,ep.y,12+2*Math.sin(tNow*5+ec),0,6.29);ctx.stroke()}}
  if(S.tutorial&&S.tutCur===0){var tp=w2s(CITIES[0].x,CITIES[0].y);var prr=14+Math.sin(tNow*5)*4;ctx.strokeStyle='rgba(45,212,191,0.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(tp.x,tp.y,prr,0,6.29);ctx.stroke();ctx.strokeStyle='rgba(45,212,191,0.35)';ctx.beginPath();ctx.arc(tp.x,tp.y,prr+7,0,6.29);ctx.stroke()}
  if(S.tutorial&&S.tutCur===3&&!reducedMotion()){var hxf=playRect.x+playRect.w*0.25+((tNow*0.35)%1)*playRect.w*0.5;var hyf=playRect.y+playRect.h*0.5+Math.sin(tNow*2)*30;ctx.font='28px sans-serif';ctx.textAlign='center';ctx.fillText('✋',hxf,hyf);ctx.strokeStyle='rgba(45,212,191,0.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(hxf-44,hyf+16);ctx.quadraticCurveTo(hxf-22,hyf-16,hxf,hyf+8);ctx.stroke()}
- for(var bi=0;bi<S.bots.length;bi++){var b=S.bots[bi];var bp=w2s(b.x,b.y);ctx.save();ctx.translate(bp.x,bp.y);ctx.rotate(b.rot);ctx.fillStyle='#9B8CFF';ctx.fillRect(-9,-9,18,18);ctx.strokeStyle='#7CF5D8';ctx.lineWidth=2;ctx.strokeRect(-10,-10,20,20);ctx.fillStyle='#D8FFFA';ctx.fillRect(-5,-4,3,3);ctx.fillRect(2,2,4,3);ctx.restore()}
+ for(var bi=0;bi<S.bots.length;bi++){var b=S.bots[bi];var bp=w2s(b.x,b.y);ctx.save();ctx.translate(bp.x,bp.y);ctx.rotate(b.rot);ctx.fillStyle=b.mega?'#ffcf63':'#9B8CFF';if(b.mega){ctx.beginPath();ctx.arc(0,0,17,0,6.29);ctx.strokeStyle='#7CF5D8';ctx.lineWidth=2;ctx.stroke()}ctx.fillRect(-9,-9,18,18);ctx.strokeStyle='#7CF5D8';ctx.lineWidth=2;ctx.strokeRect(-10,-10,20,20);ctx.fillStyle='#D8FFFA';ctx.fillRect(-5,-4,3,3);ctx.fillRect(2,2,4,3);ctx.restore()}
  var og=clamp(S.originInFlight/effConcurrency(),0,1.5);
  ctx.fillStyle='#1B2748';ctx.fillRect(portal.x-16,portal.y-26,32,52);ctx.strokeStyle=og>1?'#FF5C6C':og>0.6?'#FFA94D':'#2DD4BF';ctx.lineWidth=2;ctx.strokeRect(portal.x-16,portal.y-26,32,52);
  ctx.fillStyle=og>1?'#FF5C6C':'#2DD4BF';for(var li=0;li<3;li++)if(Math.sin(tNow*4+li)>-0.5)ctx.fillRect(portal.x-10,portal.y-18+li*10,6,4);
@@ -732,14 +736,14 @@ function shieldBurst(x,y){burst(x,y,'#7CF5D8',10);floaters.push({x:x,y:y,txt:'�
 function burst(x,y,col,n){if(reducedMotion())n=Math.ceil(n*0.3);for(var i=0;i<n&&particles.length<300;i++)particles.push({x:x,y:y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-1,life:0.5+Math.random()*0.4,col:col})}
 function floater(x,y,txt,col){if(floaters.length<30)floaters.push({x:x,y:y,txt:txt,col:col,life:1})}
 /* ================= INPUT ================= */
-let dragNode=null,downInfo=null,selectedNode=null,pointerActive=false,pendingNode=null;
+let dragNode=null,downInfo=null,selectedNode=null,pointerActive=false,pendingNode=null,gestureId=0;
 function canvasPos(e){var r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
 function nearestCity(px,py){var best=-1,bd=1e9;for(var i=0;i<CITIES.length;i++){var p=w2s(CITIES[i].x,CITIES[i].y);var d=dist(px,py,p.x,p.y);if(d<bd){bd=d;best=i}}return bd<=28?best:-1}
 function nearestNode(px,py){var best=null,bd=1e9;if(!S)return null;for(var i=0;i<S.nodes.length;i++){var n=S.nodes[i];var p=w2s(S.cities[n.cityIdx].x,S.cities[n.cityIdx].y);var d=dist(px,py,p.x,p.y-14);if(d<bd){bd=d;best=n}}return bd<=30?best:null}
 canvas.addEventListener('pointerdown',function(e){
  AudioSys.resume();
  if(!S||S.phase!=='play')return;
- if(pointerActive)return;pointerActive=true;
+ if(pointerActive)return;pointerActive=true;gestureId++;
  try{canvas.setPointerCapture(e.pointerId)}catch(err){}
  var p=canvasPos(e);var nd=nearestNode(p.x,p.y);
  downInfo={x:p.x,y:p.y,t:performance.now(),city:nearestCity(p.x,p.y),moved:0,onDome:!!nd};
@@ -757,7 +761,7 @@ canvas.addEventListener('pointermove',function(e){
   var deliberate=downInfo.onDome&&downInfo.moved>CONFIG.input.dragPickPx;
   if(held>=holdMs||deliberate){dragNode={id:pendingNode.id,slot:pendingNode.slot,warmth:pendingNode.warmth,x:p.x,y:p.y,moved:false};selectedNode=pendingNode.id;trail=[];return}
  }
- var prev=trail[trail.length-1];if(prev){var w1=s2w(prev.x,prev.y),w2=s2w(p.x,p.y);if(S)applySwipe(w1.x,w1.y,w2.x,w2.y)}
+ var prev=trail[trail.length-1];if(prev){var w1=s2w(prev.x,prev.y),w2=s2w(p.x,p.y);if(S)applySwipe(w1.x,w1.y,w2.x,w2.y,undefined,undefined,gestureId)}
  trail.push({x:p.x,y:p.y});if(trail.length>40)trail.shift();
 });
 function endPointer(e){
@@ -872,7 +876,7 @@ function startRun(mode, dailySeed, dailyOnline, dailyDate, campaignLevel){
  AudioSys.resume();
  var seed;
  if(mode==='daily'){seed=Number.isInteger(dailySeed)?dailySeed:hash32(parseInt(dailyDate||tehranDate(),10)^0xC0FFEE)}
- else if(mode==='campaign'){campaignLevel=Math.max(0,Math.min(4,Number(campaignLevel)||0));seed=hash32(0xCAFE+campaignLevel)}
+ else if(mode==='campaign'){campaignLevel=Math.max(0,Math.min(7,Number(campaignLevel)||0));seed=hash32(0xCAFE+campaignLevel)}
  else{var q=new URLSearchParams(location.search);var sq=q.get('seed');seed=sq!==null?parseInt(sq,10):Math.floor(Math.random()*1e9)}
  var _q=new URLSearchParams(location.search);var tut=!DB.tutorialSeen&&mode==='endless'&&_q.get('notut')!=='1';
  newRun(seed,mode,{tutorial:tut,dailyDate:dailyDate||tehranDate(),campaignLevel:campaignLevel});
@@ -880,7 +884,7 @@ function startRun(mode, dailySeed, dailyOnline, dailyDate, campaignLevel){
  particles=[];floaters=[];trail=[];selectedNode=null;trayEls=null;traySig='';musicNextAt=0;musicStep=0;
  $('hud').style.display='flex';showOverlay(null);resize();
  if(tut){$('tutSkip').style.display='block';tutShow(0)}else{$('tutSkip').style.display='none'}
- banner(mode==='daily'?'📅 '+S.modifier.name:mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name+' · '+toFa(CAMPAIGN[S.campaignLevel].seconds)+' ثانیه':'▶ بازی شروع شد!','good');
+ banner(mode==='daily'?'📅 '+S.modifier.name:mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name+' · '+toFa(CAMPAIGN[S.campaignLevel].seconds)+' ثانیه'+(CAMPAIGN[S.campaignLevel].story?' · '+CAMPAIGN[S.campaignLevel].story:''):'▶ بازی شروع شد!','good');
 }
 function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,false,S.dailyDate,S.campaignLevel)}
 let resumeIv=null,resuming=false;
@@ -904,7 +908,7 @@ function refreshMenu(){
 function gameOverUI(){
  var f=S.finalStats;var r=rankFor(f.score);
  setText('overTitle',S.won?'مرحله کامل شد!':'بازی تموم شد!');
- if(S.won&&S.mode==='campaign'){DB.campaignUnlocked=Math.min(5,Math.max(Number(DB.campaignUnlocked)||1,S.campaignLevel+2))}
+ if(S.won&&S.mode==='campaign'){DB.campaignUnlocked=Math.min(8,Math.max(Number(DB.campaignUnlocked)||1,S.campaignLevel+2))}
  setText('overScore',toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')));
  setText('overRank',r[1]);setText('overFunny',r[2]);
  setText('overMode',S.mode==='daily'?((S.challengeToken?'🔗 چالش دوستانه ':'📅 چالش ')+S.dailyDate+' · '+S.modifier.name):S.mode==='campaign'?'🗺 '+CAMPAIGN[S.campaignLevel].name:'حالت آزاد');
@@ -956,6 +960,7 @@ function handleEvents(){
    banner(names[ev.etype]||'رویداد!','gold');AudioSys.stinger();vibrate(20);
   }
   else if(ev.type==='slotUnlocked'){toast('یه نود جدید باز شد!');AudioSys.unlock();vibrate(15)}
+  else if(ev.type==='megaPulse'){var pulse=w2s(ev.x,ev.y);burst(pulse.x,pulse.y,'#7CF5D8',6)}
   else if(ev.type==='friendlyFire'){toast('ترافیک سالم رو فیلتر کردی!');AudioSys.timeout()}
   else if(ev.type==='gameOver'){AudioSys.gameover();vibrate(80);if(!S.won&&!S.secondChanceUsed&&!S.tutorial)showOverlay('ovSecondChance');else gameOverUI()}
  }
@@ -1018,7 +1023,7 @@ function loopBody(ts){
 }
 /* ================= WIRING ================= */
 $('btnPlay').addEventListener('click',function(){startRun('endless')});
-$('btnCampaign').addEventListener('click',function(){var root=$('campaignChoices');root.textContent='';var unlocked=Math.max(1,Math.min(5,Number(DB.campaignUnlocked)||1));CAMPAIGN.forEach(function(level,i){var b=document.createElement('button');b.className='btn';b.disabled=i>=unlocked;b.textContent=(i>=unlocked?'🔒 ':'')+toFa(i+1)+' · '+level.name+' — '+toFa(level.seconds)+' ثانیه';b.addEventListener('click',function(){if(i<unlocked)startRun('campaign',null,false,null,i)});root.appendChild(b)});showOverlay('ovCampaign')});
+$('btnCampaign').addEventListener('click',function(){var root=$('campaignChoices');root.textContent='';var unlocked=Math.max(1,Math.min(8,Number(DB.campaignUnlocked)||1));CAMPAIGN.forEach(function(level,i){var b=document.createElement('button');b.className='btn';b.disabled=i>=unlocked;b.textContent=(i>=unlocked?'🔒 ':'')+toFa(i+1)+' · '+level.name+' — '+toFa(level.seconds)+' ثانیه'+(level.story?' · '+level.story:'');b.addEventListener('click',function(){if(i<unlocked)startRun('campaign',null,false,null,i)});root.appendChild(b)});showOverlay('ovCampaign')});
 $('btnCampaignBack').addEventListener('click',function(){showOverlay('ovMenu')});
 async function requestWithTimeout(path,options,ms){var ctrl=typeof AbortController!=='undefined'?new AbortController():null,timer;options=options||{};if(ctrl)options.signal=ctrl.signal;try{return await Promise.race([fetch(path,options),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},ms)})])}finally{clearTimeout(timer)}}
 const RANDOM_NAMES=['آهو','خرگوش','پلنگ','یوزپلنگ','گنجشک','عقاب','طوطی','قوچ','قناری','روباه','سنجاب','کبوتر','بلبل','طاووس','پاندا','دلفین','نهنگ','لاکپشت','خرس','گربه','پنگوئن','پروانه','زرافه','اسب','شیر','ببر','گوزن','مرغابی','کوالا','سمور','پوما','اردک','چکاوک','هما','هدهد','پرستو','شاهین','فلامینگو','میمون','شتر','آفتابی','تیزپا','شاداب','پرتلاش','چابک','زرنگ','خندان','آرام','کنجکاو','درخشان'];

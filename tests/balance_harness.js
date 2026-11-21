@@ -75,7 +75,7 @@ function makePolicy(policy, S, rngSeed) {
     if (policy === 'greedy') {
       while (st.gi < greedyOrder.length && S.nodes.length < S.slotsTotal) { G.applyAction({ type: 'place', city: greedyOrder[st.gi] }); st.gi++; }
       for (const b of S.bots) {
-        if (!b.alive || st.swiped.has(b.id)) continue;
+        if (!b.alive || (st.swiped.has(b.id)&&(!b.mega||S.t-b.lastHit<0.17))) continue;
         const n = S.nodes.find(n => n.id === b.targetNodeId); if (!n) continue;
         const [nx, ny] = nodePos(S, n);
         if (dist(b.x, b.y, nx, ny) < 250) { G.applyAction({ type: 'swipe', x1: b.x, y1: b.y - 30, x2: b.x, y2: b.y + 30, killR, friendR }); st.swiped.add(b.id); }
@@ -107,6 +107,7 @@ function makePolicy(policy, S, rngSeed) {
     if (st.placeT <= 0 && st.gi < humanOrder.length && S.nodes.length < S.slotsTotal) { G.applyAction({ type: 'place', city: humanOrder[st.gi] }); st.gi++; st.placeT = placeLo + prand() * (placeHi - placeLo); }
     for (const b of S.bots) {
       if (!b.alive) continue;
+      if(b.mega&&b.hitsLeft<3&&b.lastHit>=0&&S.t-b.lastHit>=0.2&&(policy==='expert'||policy==='human'&&prand()<0.03)){swipeAt(b);continue}
       if (!st.seen.has(b.id)) { st.seen.set(b.id, S.t + reactLo + prand() * (reactHi - reactLo)); continue; }
       const at = st.seen.get(b.id);
       if (at === -1) {

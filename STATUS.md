@@ -140,3 +140,19 @@ New Stages 2 and 3 are not yet implemented in this commit.
 
 ## New Stage 2 — share card and chooser (partial acceptance)
 Implemented canvas PNG card for free/daily/campaign, inline font, map with real node placements and links, score/title/stats/badges, conditional nickname/rank and new-best/top-three ribbon; share text and image chooser precomputes blob before click, with native share and download/copy fallback, and AbortError suppression. Removed old share-text overlay; challenge link is prepared through its existing button and included after creation. Three sample PNGs and 390×844, 844×390, 1280×720 mock screenshots are generated; inspected rendered map and fixed city labels. `node tests/run_all.js`, `python3 tests/visual_share.py`, `python3 tests/share_logic.py`, `python3 tests/visual_online.py` pass. Share tests use desktop Chromium with mocked browser sharing, not iOS/real device. **Remaining:** no mock-canvas test, no measured 300ms guarantee on target phones; visual sample city labels can crowd, no robust word-wrap, upgrade badges are count rather than separate glyphs. The exact requested wording «جلو بزنی» is a harmless competitive phrase; violent-word test exempts that phrase only. Arvan still unverified.
+
+## New Stage 3 — eight-level campaign
+Implemented levels 6–8, persistent sequential unlocks, friendly stories, 25% deterministic heavy requests / 20s small-city viral spikes and four-node cap on level 6, buildup and ×2.2 final-25s surge with 25s filter waves on level 7, and deterministic 1–3 mega-packets per wave on level 8. Mega requires three separate gestures with at least 150ms simulated time between hits; surviving hits pulse, a leak doubles the attacked node/origin duration. Level-specific tuning adds node capacity +4/+7/+3 and reduces timeout and leak damage to 55%/30%/40% for levels 6/7/8, respectively; those are gameplay tuning, not platform measurements. Policies choose the first offered upgrade, as normal campaign grants upgrades; no second chance. Expert and greedy were amended to retry mega targets; human has a probabilistic repeat. 30 varied deterministic simulated seeds per level, lazy / human / expert / greedy wins:
+
+| Level | lazy | human | expert | greedy |
+|---|---:|---:|---:|---:|
+| 1 | 83% | 100% | 100% | 100% |
+| 2 | 0% | 100% | 100% | 100% |
+| 3 | 0% | 97% | 100% | 100% |
+| 4 | 0% | 87% | 100% | 100% |
+| 5 | 0% | 43% | 100% | 100% |
+| 6 | 0% | 50% | 100% | 100% |
+| 7 | 0% | 40% | 100% | 100% |
+| 8 | 0% | 30% | 100% | 100% |
+
+This is bot-harness calibration, not human testing; the lazy policy already wins level 1, while it loses all of 6–8 as requested. Repeated-seed level-8 expert runs and gesture/cooldown/four-slot assertions pass. Selection/lock/victory/unlock of 8 and reload persistence were tested in Chromium at 390×844, 844×390 and 1280×720; older `visual_v2.py` and `node tests/run_all.js` pass. Real phone performance and actual players remain unverified; Arvan was not accessed. Stage 2 remaining limitations above still apply.
