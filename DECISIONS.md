@@ -98,3 +98,6 @@ Clutch save was added without changing CONFIG: a served request below 12% remain
 
 ## Continuation — image-free worker
 `build.js` additionally emits `worker.lite.js`, with no embedded OG image and `/og.png` returning 404. Both variants are public, secret-free and still report validation NONE, store NONE; they are not LITE score validators. Local smoke checks exercise both. No gameplay or CONFIG change in this slice.
+
+## Continuation — golden requests
+Added CONFIG `golden:{chance:0.04,fastPoints:5,slaGain:3}`; selection is an independent hash of seed and request ID, limited to one live request. Fast delivery earns ×5 score and +3 SLA. `tests/golden.js` checks reward, concurrency and seeded repeatability; `node tests/run_all.js` retains green survival bands and 50-seed soak. No replay validator exists.

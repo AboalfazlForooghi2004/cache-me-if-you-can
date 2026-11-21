@@ -14,7 +14,7 @@
 - Stage 6 is **partial**: assets and limited screenshot QA only; not all requested screens exist.
 
 ## Cut / not implemented in this run
-- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; golden requests; Turbo; second chance; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
+- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; Turbo; second chance; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
 - Campaign win rates and upgrade pick rates cannot be reported because those features do not exist.
 
 ## Platform and delivery
@@ -24,3 +24,7 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 - GitHub `main` was fast-forwarded to `e4eb018` and historical commit `ab1c4e3` was tagged `v1-live` before this slice. The tag is a historical anchor; correspondence to the owner's live deployment is unverified.
 - Added a second image-free `worker.lite.js` bundle; local worker smoke tests verify that `/` works and `/og.png` returns 404 in the lite bundle. Both bundles remain `store NONE / validation NONE`; lite does not mean LITE validation. Private builds, S3 and all other missing items above remain unavailable.
 - No Arvan calls were made. All runtime compatibility and platform limits remain UNVERIFIED ON ARVAN.
+
+## Continuation — golden-request slice
+- Implemented deterministic golden selection at 4% per request via seed/id hash, at most one live, ×5 score and +3 SLA when fast, with a gold mark and burst. `tests/golden.js` verifies the fast reward, one-live limit and seeded repeatability. The 50-seed existing soak and difficulty bands pass. `tests/screenshots/stage-current/390x844-golden.png` is a curated browser capture (golden flag set through test API), not evidence of natural spawn frequency.
+- CONFIG added: golden `{chance:0.04, fastPoints:5, slaGain:3}`. Score percentiles changed, as recorded in the final harness output. Turbo, second chance, all upgrade picks, eight daily modifiers, replay validation and the global leaderboard remain unimplemented.
