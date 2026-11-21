@@ -78,3 +78,6 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — isolated LITE plausibility checks
 - Added a non-endpoint `worker/src/lite_validation.js` prototype: verifies a start ticket, checks matching seed, finite and bounded duration/statistics, broad score/arrival bounds and elapsed wall-clock plausibility, then consumes its nonce via `putIfAbsent`. Mock tests exercise simultaneous duplicate submissions, malformed/tampered input and fail-closed storage errors. This is **not** replay validation or proof of fair play: a forged but plausible submission can pass, and target-provider conditional-write atomicity has not been established. There is no IP/rate-limit system, signed-start endpoint, leaderboard submission, live store or private build. Public worker diagnostics correctly remain validation NONE / store NONE.
+
+## Continuation — bounded store listing
+- Added isolated sorted prefix listing to the S3 and in-memory adapters, bounded to 100 keys and with strict key/response checks. `tests/store_list.js` verifies sorted mock results and invalid keys/responses; the existing AWS signing vector and full suite pass. This is still not a deployed leaderboard or a pagination implementation. Ordering, ListObjectsV2 behavior, consistency, conditional-create atomicity and outgoing fetch remain **UNVERIFIED ON ARVAN**.

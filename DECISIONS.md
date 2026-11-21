@@ -137,3 +137,6 @@ Three of five deterministic goals per Tehran date are completed per run and stor
 
 ## Continuation — isolated LITE prototype
 A standalone plausibility checker binds submitted statistics to an expiring start ticket and consumes a nonce only via a store's conditional create. It intentionally applies broad bounds and cannot reject all fabricated plausible runs. Tests use an in-memory store only; conditional-write atomicity on the target S3 service remains unverified. It is not wired into a request handler or public builds, and lacks rate limiting and score indexing.
+
+## Continuation — bounded S3 listing
+The isolated store exposes sorted prefix listing, up to 100 keys per request; no continuation handling or deployed scoreboard is claimed. Restricted ASCII keys avoid XML entity handling in the list parser. Mock tests are not evidence of S3 ordering or consistency on Arvan.
