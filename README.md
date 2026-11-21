@@ -1,4 +1,4 @@
-> **V2 work in progress — not ready for contest submission.** An offline five-stage survival campaign, daily modifiers, upgrades and second chance are available. There is no replay validation, persistent global leaderboard, private S3 build or AI integration. The daily endpoint reports `verificationAvailable:false`; scores are not submitted. Arvan deployment has not been tested. See `STATUS.md` for current results and missing requirements. Older V1 results below are historical.
+> **V2 work in progress — not ready for contest submission.** An offline five-stage survival campaign, daily modifiers, upgrades, second chance, local nickname entry and local missions/streak are available. There is no replay validation, persistent global leaderboard, private S3 build or AI integration. Isolated S3 signing, signed-ticket and LITE plausibility prototypes are tested but not enabled in the worker. The daily endpoint reports `verificationAvailable:false`; scores are not submitted. Arvan deployment has not been tested. See `STATUS.md` for current results and missing requirements. Older V1 results below are historical.
 
 # کَشَم کن اگه می‌تونی! — Cache Me If You Can
 

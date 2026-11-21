@@ -3,18 +3,18 @@
 ## Implemented and tested locally
 - Existing Node 21+ navigator fix, distinct expert policy, guarded worker, partial non-violent packet reskin and mobile tray fix. The gameplay engine remains V1-derived and runs offline.
 - Non-violent banned-copy scan (`tests/content_clutch.js`). Deterministic clutch save: under 12% patience doubles points, adds 1 SLA and does not increment combo; explicit regression test. SLA-under-40 vignette respects reduced motion. Adaptive music and most other hype features remain absent.
-- Local top-10 screen labelled «جدول شخصی» using already-local score records, not a global leaderboard; browser smoke exercised the empty board and menu/play at seven viewports. Old records may have only five entries. Name entry is not implemented.
+- Local top-10 screen labelled «جدول شخصی» using already-local score records, not a global leaderboard; browser smoke exercised the empty board and menu/play at seven viewports. Old records may have only five entries. Optional validated local nickname entry is available; no online submission exists.
 - Thumbnail and OG PNG rendered from an earlier committed gameplay screenshot; showcase copy supplied. `/og.png` returns the embedded PNG; tested byte-for-byte locally.
 - `node tests/run_all.js`: green, including syntax-related build checks, content/clutch, simulated gameplay, 50-seed invariants, worker and build safety. Existing soak is not a replay test.
 - Build: public only, store NONE, validation NONE. `private_dist/` is not supported: builds fail closed when secret/store environment variables are present. `/__diag` does not benchmark the simulation or contact a store.
 
 ## Partial / unverified
 - Stage 1 is **partial**: 390×844 map nominally 350×312px (height target 523px unmet); labels still can overlap. Adaptive music, packet trails and full hype are not implemented. Browser screenshots under `tests/screenshots/stage-current/` cover menu/play at seven sizes plus local board; they are not a full feature matrix and no device FPS was measured.
-- Stage 3 local board is **partial**: no name input, score upload, HMAC, LITE validation, secret builds, or anti-replay. `/api/daily` seed is local-tested; scoring is disabled. No challenge tokens.
+- Stage 3 local board is **partial**: no online score upload, signed start endpoint, deployed LITE validation, secret builds, or deployed anti-replay. Isolated HMAC/LITE prototypes are described below. `/api/daily` seed is local-tested; scoring is disabled. No challenge tokens.
 - Stage 6 is **partial**: assets and limited screenshot QA only; not all requested screens exist.
 
 ## Cut / not implemented in this run
-- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
+- Mega-packet boss; campaign levels 6–8; global board; share-card V2 polish; deployed LITE validation; deployed S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
 - Campaign and upgrade simulation tables are documented in the later sections.
 
 ## Platform and delivery
@@ -41,7 +41,7 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — second chance
 - A once-per-run, opt-in second chance now appears on first game over (except tutorial): continue with 30 SLA and reset combo, or finish normally. It is free and works offline; no intermediate score is persisted before the decision. Test `tests/second_chance.js` verifies the simulation's once-only state transition; `tests/visual_v2.py` exercises both UI and final game over in Chromium. Screenshots include `390x844-second-chance.png` and daily screens. Bot balance tables above deliberately use the original policy with no second-chance acceptance and so are conservative, not player-session predictions.
-- Second chance is no longer a missing item. At that point upgrades, campaign, secure names and online features were missing; see later sections. `node tests/run_all.js` passes. Latest authenticated remote push remains at `9fc6cd6`; a new unauthenticated push failed because this environment does not expose `GITHUB_TOKEN`, so subsequent local commits need pushing or manual bundle transfer.
+- Second chance is no longer a missing item. At that point upgrades, campaign, secure names and online features were missing; see later sections. `node tests/run_all.js` passes. At that time the latest authenticated remote push was `9fc6cd6`; later authenticated pushes succeeded.
 
 ## Continuation — six upgrade choices
 - At 45 seconds and then every 45 seconds after a choice, deterministic seed-based offers present up to three distinct unowned upgrades; simulation pauses until a valid choice. Each can be chosen once per run: capacity +1, warmth gain +10%, request patience +4%, edge travel −5%, fast-SLA gain +15%, timeout damage −10%. They apply only for that run. Tutorial does not offer upgrades; subsequent play resumes without a network dependency. The capacity indicator shows five pips when upgraded.
@@ -55,7 +55,7 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 ## Continuation — five-stage offline campaign
 - Added an offline five-stage survival campaign, each with a deterministic level seed, level name, target time (45/60/75/90/105s), progressively increased traffic multiplier (0.85/0.90/0.95/1.00/1.05), elapsed/target display, win state, locally persisted sequential unlocks and once-per-run second chance on losses. This is a simple survival interpretation, not evidence of any unimplemented extra campaign-specific mechanics.
 - `tests/campaign.js`: 30 varied simulation seeds per level, human/expert/greedy win rates: level 1 100/100/100%, level 2 100/100/100%, level 3 97/100/100%, level 4 87/100/100%, level 5 40/100/100%. Tests use varied seeds to estimate balance, whereas actual play uses one fixed seed per level; policy chooses the first upgrade and does not accept second chance. Rates are not human playtest results. `tests/visual_v2.py` checks selection, locked level, a curated victory and unlocking.
-- Missing ship-blocking functionality still includes safe nickname flow, all authenticated/private store/validation/challenge functionality, and requested progression/streak/missions and remaining UI/QA polish. No Arvan deployment verification.
+- At that time missing functionality included nickname flow, authenticated/private store/validation/challenge functionality, progression/streak/missions and remaining UI/QA polish; later sections describe local-only progress. No Arvan deployment verification.
 
 ## Continuation — isolated S3 signing primitives
 - The local commits through `4a5530e` were pushed to GitHub `main` using the owner's authorized credential; it was not saved to repository configuration or files.
