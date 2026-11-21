@@ -226,6 +226,7 @@ edge:{oneWayBase:0.18,perUnit:1/1100,process:0.15},
 origin:{baseOneWay:0.35,perUnit:1/1400,process:0.15,concurrency:8,queuePerExtra:0.45,queueMax:4.0,vx:-350,vy:-250},
 nodes:{capacity:4,startSlots:2,unlockAt:[[0,2],[25,3],[55,4],[95,5]],warmthMin:0.25,warmthMax:0.95,warmthGain:0.07,idleAfter:8,idleDecayPerSec:0.02,relocateSec:1.5,outageWarmthFactor:0.5,reroutePenalty:0.4},
 golden:{chance:0.04,fastPoints:5,slaGain:3},
+turbo:{threshold:12,duration:6,cooldown:20},
 score:{base:10,comboStep:4,comboStepBonus:0.25,comboMaxMult:3.0,botKill:5,perfectWave:300,lateDampFrom:120,lateDampPerSec:1/600,lateDampMin:0.5},
 sla:{start:100,fastGain:0.25,timeout:-8,botLeak:-6,friendlyFire:-3,waveClearGain:5,lowThreshold:20},
 bots:{baseSpeed:230,bossSpeedMul:1.15,attackSec:3.0,telegraphSec:2.0,spawnSpreadSec:3.0,countBase:5,countPerWave:2,countMax:24,bossCountMul:1.8,killRadiusPx:24,friendlyRadiusPx:16,friendlyCooldown:1.5},
@@ -280,7 +281,7 @@ function newRun(seed,mode,opts){
   for(var i=0;i<tl.events.length;i++)for(var j=0;j<tl.waves.length;j++){if(tl.events[i].t<CONFIG.conflictGuard.untilT&&Math.abs(tl.events[i].t-tl.waves[j].t)<CONFIG.conflictGuard.minSep){tl.events[i].t+=CONFIG.conflictGuard.shift;changed=true}}
  }
  S={phase:'play',mode:mode||'endless',seed:seed,t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
- rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
+ rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
  cities:CITIES.map(function(c){return{id:c.id,x:c.x,y:c.y,w:c.w,serveNodeId:null,pending:0}}),
  nodes:[],requests:[],bots:[],slotsTotal:CONFIG.nodes.startSlots,nextUnlockIdx:1,
@@ -419,7 +420,8 @@ function stepSim(dt){
    if(n.state==='offline')n.warmth=Math.max(CONFIG.nodes.warmthMin,n.warmth*CONFIG.nodes.outageWarmthFactor);
    n.state='online';emit('nodeOnline',{node:n.id});
   }
-  if(S.t-n.lastAssignT>CONFIG.nodes.idleAfter)n.warmth=Math.max(CONFIG.nodes.warmthMin,n.warmth-CONFIG.nodes.idleDecayPerSec*dt);
+  if(S.t<S.turboUntil)n.warmth=CONFIG.nodes.warmthMax;
+  else if(S.t-n.lastAssignT>CONFIG.nodes.idleAfter)n.warmth=Math.max(CONFIG.nodes.warmthMin,n.warmth-CONFIG.nodes.idleDecayPerSec*dt);
  }
  if(S.activeWave){
   var aw=S.activeWave;
@@ -452,13 +454,13 @@ function stepSim(dt){
    var ymul=(S.activeEvent&&S.activeEvent.type==='yalda')?CONFIG.events.yalda.scoreMul:1;
    var damp=S.t<CONFIG.score.lateDampFrom?1:Math.max(CONFIG.score.lateDampMin,1-(S.t-CONFIG.score.lateDampFrom)*CONFIG.score.lateDampPerSec);
    var clutch=remFrac<0.12;
-   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*mult*ymul*damp*(clutch?2:1));
+   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*Math.min(6,mult*(S.t<S.turboUntil?2:1))*ymul*damp*(clutch?2:1));
    var fast=elapsed<=CONFIG.fastSec;
    var goldenFast=!!r.golden&&fast;
    if(goldenFast){pts*=CONFIG.golden.fastPoints;S.sla=Math.min(100,S.sla+CONFIG.golden.slaGain)}
    var oldMult=mult;
    if(clutch)S.sla=Math.min(100,S.sla+1);
-   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain);S.fastCount++}
+   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
    var newMult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    S.score+=pts;S.served++;S.latencySum+=elapsed;
    if(r.route==='hit'){S.hits++;var hn=nodeById(r.nodeId);if(hn)hn.hitsServed++}else if(r.route==='miss')S.misses++;else S.originServes++;
@@ -648,6 +650,7 @@ function renderInner(tNow){
  ctx.restore();
  if(vigT>0){var vg=ctx.createRadialGradient(VW/2,VH/2,VH*0.3,VW/2,VH/2,VH*0.75);vg.addColorStop(0,'rgba(255,92,108,0)');vg.addColorStop(1,'rgba(255,92,108,'+(0.35*vigT)+')');ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH);vigT-=0.016}
  if(S&&S.sla<40&&S.phase==='play'){var vg2=ctx.createRadialGradient(VW/2,VH/2,VH*0.35,VW/2,VH/2,VH*0.8);vg2.addColorStop(0,'rgba(255,92,108,0)');vg2.addColorStop(1,'rgba(255,92,108,'+(reducedMotion()?0.12:0.12+0.06*(1+Math.sin(tNow*3))/2)+')');ctx.fillStyle=vg2;ctx.fillRect(0,0,VW,VH)}
+ if(S&&S.phase==='play'&&S.t<S.turboUntil){ctx.strokeStyle='rgba(245,196,81,0.65)';ctx.lineWidth=4;ctx.strokeRect(2,2,VW-4,VH-4)}
  if(flashT>0){ctx.fillStyle='rgba(255,255,255,'+(flashT*0.7)+')';ctx.fillRect(0,0,VW,VH);flashT-=0.016}
  if(shakeT>0)shakeT-=0.016;
 }
@@ -859,6 +862,7 @@ function handleEvents(){
   if(ev.type==='nodePlaced'){/* tutorial advances in tutTick */}
   else if(ev.type==='requestServed'){var sp=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp.x,sp.y-20,ev.clutch?'نجات! +'+toFa(ev.pts):'+'+toFa(ev.pts),ev.clutch?'#F5C451':ev.fast?'#7CF5D8':'#FFA94D');if(ev.golden){floater(sp.x,sp.y-38,'✦ طلایی!','#F5C451');burst(sp.x,sp.y,'#F5C451',10)}if(ev.clutch)AudioSys.tone(740,1100,0.16,'sine',0.12);if(ev.fast){burst(sp.x,sp.y,'#2DD4BF',4);AudioSys.hit(S.combo);if(S.combo%5===0)vibrate(8)}else AudioSys.tick()}
   else if(ev.type==='requestTimeout'){var sp2=w2s(S.cities[ev.city].x,S.cities[ev.city].y);floater(sp2.x,sp2.y-20,'!','#FF5C6C');burst(sp2.x,sp2.y,'#FF5C6C',8);AudioSys.timeout();vibrate(30)}
+  else if(ev.type==='turboStart'){banner('⚡ توربو!','gold');AudioSys.fanfare()}
   else if(ev.type==='comboUp'){banner('🔥 کمبو ×'+toFa(ev.mult.toFixed(1)),'gold');AudioSys.comboUp(S.combo);vibrate(20)}
   else if(ev.type==='botKilled'){var bp=w2s(ev.x,ev.y);shieldBurst(bp.x,bp.y);floater(bp.x,bp.y,'+'+toFa(CONFIG.score.botKill),'#FF5C6C');AudioSys.zap();vibrate(8)}
   else if(ev.type==='botLeaked'){shakeT=6;vigT=1;AudioSys.leak();vibrate(40)}

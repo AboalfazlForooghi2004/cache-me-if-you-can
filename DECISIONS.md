@@ -101,3 +101,6 @@ Clutch save was added without changing CONFIG: a served request below 12% remain
 
 ## Continuation — golden requests
 Added CONFIG `golden:{chance:0.04,fastPoints:5,slaGain:3}`; selection is an independent hash of seed and request ID, limited to one live request. Fast delivery earns ×5 score and +3 SLA. `tests/golden.js` checks reward, concurrency and seeded repeatability; `node tests/run_all.js` retains green survival bands and 50-seed soak. No replay validator exists.
+
+## Continuation — Turbo
+Added CONFIG `turbo:{threshold:12,duration:6,cooldown:20}`: automatic activation on reaching combo threshold and after cooldown, maximum node warmth while active, doubled fast SLA gain and multiplier (6× cap). Triggering completion itself uses pre-Turbo scoring. Smoke checks and 50-seed survival tests pass; screenshot is curated, not natural activation evidence.
