@@ -95,3 +95,6 @@ This section supersedes earlier claims wherever they conflict. No Arvan deployme
 
 ## Shipping override — partial slice
 Clutch save was added without changing CONFIG: a served request below 12% remaining patience gets double points and +1 SLA without advancing combo. Local bot bands remain green; `tests/content_clutch.js` checks the precise score/SLA/combo behavior and bans specified violent copy in the built HTML. SLA edge heat now begins below 40%. Added an explicitly local top-10 view and an OG image generated from a previously committed play screenshot. This is not the requested full V2: see STATUS.md for cuts and unverified items. No global data, Arvan account, AI or paid service was used.
+
+## Continuation — image-free worker
+`build.js` additionally emits `worker.lite.js`, with no embedded OG image and `/og.png` returning 404. Both variants are public, secret-free and still report validation NONE, store NONE; they are not LITE score validators. Local smoke checks exercise both. No gameplay or CONFIG change in this slice.

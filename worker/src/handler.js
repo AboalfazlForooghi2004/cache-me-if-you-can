@@ -38,6 +38,7 @@ async function handleRequest(request) {
   if (request.method !== 'GET') return new Response('Method not allowed', {status:405, headers:{'Allow':'GET'}});
   if (url.pathname === '/') return new Response(INDEX_HTML, {headers:{'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff'}});
   if (url.pathname === '/og.png') {
+   if(!OG_BASE64)return new Response('Not found',{status:404});
    if(typeof atob!=='function')return new Response('Unavailable',{status:503});
    const raw=atob(OG_BASE64), bytes=new Uint8Array(raw.length);
    for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);

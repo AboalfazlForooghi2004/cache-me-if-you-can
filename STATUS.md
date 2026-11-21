@@ -19,3 +19,8 @@
 
 ## Platform and delivery
 All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched. The environment does not expose `GITHUB_TOKEN`; unauthenticated push was rejected. A complete local output folder, repository archive and git bundle are generated for manual delivery. Do not upload this unfinished prototype over live V1.
+
+## Continuation — delivery slice
+- GitHub `main` was fast-forwarded to `e4eb018` and historical commit `ab1c4e3` was tagged `v1-live` before this slice. The tag is a historical anchor; correspondence to the owner's live deployment is unverified.
+- Added a second image-free `worker.lite.js` bundle; local worker smoke tests verify that `/` works and `/og.png` returns 404 in the lite bundle. Both bundles remain `store NONE / validation NONE`; lite does not mean LITE validation. Private builds, S3 and all other missing items above remain unavailable.
+- No Arvan calls were made. All runtime compatibility and platform limits remain UNVERIFIED ON ARVAN.
