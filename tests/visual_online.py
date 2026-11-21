@@ -8,7 +8,8 @@ with sync_playwright() as p:
  b=p.chromium.launch();pg=b.new_page(viewport={'width':390,'height':844});errors=[];pg.on('pageerror',lambda e:errors.append(str(e)))
  def route(r):
   url=r.request.url;path=url.split('?')[0];calls.append((url,r.request.method))
-  if failure and '/api/' in path:r.fulfill(status=503,json={'ok':False})
+  if path.endswith('/api/ping'):r.fulfill(status=200,json={'ok':True,'online':True,'t':1})
+  elif failure and '/api/' in path:r.fulfill(status=503,json={'ok':False})
   elif path.endswith('/api/start'):
    body=r.request.post_data_json or {};r.fulfill(status=200,json={'ok':True,'date':'20261101','seed':hash32(20261101^0xC0FFEE),'token':'test-token','validation':'LITE','challenge':'challenge' in body})
   elif path.endswith('/api/score'):r.fulfill(status=200,json={'ok':True,'validation':'LITE'})

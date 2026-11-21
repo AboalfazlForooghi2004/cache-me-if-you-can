@@ -35,6 +35,7 @@ async function diagnostics() {
 async function handleRequest(request) {
  try {
   const url = new URL(request.url);
+  if (request.method === 'HEAD' && url.pathname === '/') return new Response(null,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'}});
   if (request.method !== 'GET') return new Response('Method not allowed', {status:405, headers:{'Allow':'GET'}});
   if (url.pathname === '/') return new Response(INDEX_HTML, {headers:{'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff'}});
   if (url.pathname === '/og.png') {
@@ -44,7 +45,7 @@ async function handleRequest(request) {
    for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
    return new Response(bytes,{headers:{'Content-Type':'image/png','Cache-Control':'public, max-age=86400'}});
   }
-  if (url.pathname === '/api/ping') return jsonResponse({ok:true,t:Date.now()});
+  if (url.pathname === '/api/ping') return jsonResponse({ok:true,t:Date.now(),online:false});
   if (url.pathname === '/__diag') return jsonResponse(await diagnostics());
   if (url.pathname === '/api/daily') { try {return jsonResponse(dailyAt(new Date()))} catch(e) {return jsonResponse({ok:false,message:'تاریخ تهران در دسترس نیست'},503)} }
   if (url.pathname.startsWith('/api/')) return jsonResponse({ok:false, message:'این قابلیت هنوز فعال نیست.'},503);

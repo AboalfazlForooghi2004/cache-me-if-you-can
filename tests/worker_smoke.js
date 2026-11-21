@@ -8,7 +8,7 @@ const {handleRequest,dailyAt}=require('../worker/dist/worker.js');
  const og=await handleRequest(new Request('http://localhost/og.png'));assert.equal(og.status,200);assert.equal(og.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await og.arrayBuffer()),fs.readFileSync('assets/og_1200x630.png'));
  const lite=require('../worker/dist/worker.lite.js');assert.equal((await lite.handleRequest(new Request('http://localhost/og.png'))).status,404);assert.equal((await lite.handleRequest(new Request('http://localhost/'))).status,200);
  const ping=await handleRequest(new Request('http://localhost/api/ping'));
- const p=await ping.json();assert.equal(p.ok,true);assert(Number.isFinite(p.t));
+ const p=await ping.json();assert.equal(p.ok,true);assert.equal(p.online,false);assert(Number.isFinite(p.t));const head=await handleRequest(new Request('http://localhost/',{method:'HEAD'}));assert.equal(head.status,200);assert.equal(await head.text(),'');
  const daily=await handleRequest(new Request('http://localhost/api/daily'));
  assert.equal(daily.status,200);const d=await daily.json();assert(/^\d{8}$/.test(d.date));assert(Number.isInteger(d.seed));assert.equal(d.verificationAvailable,false);
  assert.equal(dailyAt(new Date('2026-11-18T20:29:59Z')).date,'20261118');

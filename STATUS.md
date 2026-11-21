@@ -119,3 +119,6 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Stage A — personal boards removed
 Personal board menu entries, overlays, rendering, stored top lists and associated screenshots have been removed. Existing stored personal-board arrays are deleted during migration; best score, daily mission flags, streak, nickname and campaign remain. Daily intro now shows mission completion and streak. `node tests/run_all.js`, `tests/visual_v2.py`, and seven-viewport `tests/visual_stage.py` pass. Later stages of the new request remain in progress.
+
+## Stage B — online capability and HEAD
+Public ping reports `online:false`; configured private bundle reports `online:true`. Browser probes once with 1.5s timeout only over HTTP(S), showing online controls only after a positive ping. Both bundle modes support HEAD `/`. Existing mock tests and browser offline/online smoke pass; `online:true` reflects configuration, not successful real S3 verification.
