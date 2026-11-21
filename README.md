@@ -1,4 +1,4 @@
-> **V2 work in progress — not ready for contest submission.** Only the P0 work and a local worker bootstrap described in `DECISIONS.md` have been started. There is no replay validation, persistent leaderboard, campaign or AI integration yet. The preliminary same-origin daily seed endpoint reports `verificationAvailable:false`; daily scores are not submitted. Arvan deployment has not been tested. Prior V1 results and screenshots below are historical; they are not evidence that V2 requirements pass.
+> **V2 work in progress — not ready for contest submission.** An offline five-stage survival campaign, daily modifiers, upgrades and second chance are available. There is no replay validation, persistent global leaderboard, private S3 build or AI integration. The daily endpoint reports `verificationAvailable:false`; scores are not submitted. Arvan deployment has not been tested. See `STATUS.md` for current results and missing requirements. Older V1 results below are historical.
 
 # کَشَم کن اگه می‌تونی! — Cache Me If You Can
 
@@ -107,7 +107,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 
 Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
 `src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`
-`dist/worker.lite.js` (without OG image), and `output/` copies. Both workers remain store NONE / validation NONE. Shared simulation extraction, replay validation and private S3
+ `dist/worker.lite.js` (without OG image), and `output/` copies. Both workers remain store NONE / validation NONE. Shared simulation extraction, replay validation and private S3
 builds are **not implemented**. The build refuses secret/storage environment variables.
 `/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
 replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.

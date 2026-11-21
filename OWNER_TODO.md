@@ -1,6 +1,6 @@
 # Owner actions — interim build, not contest-ready
 
-1. **Keep the existing live V1 unchanged.** The current V2 prototype has no score validation, rankings, signed challenges, campaign or private S3 build. Do not replace the live version with it or create a paid bucket yet.
+1. **Keep the existing live V1 unchanged.** The current V2 prototype has no score validation, global rankings, signed challenges or private S3 build. Do not replace the live version with it or create a paid bucket yet.
 2. Once a complete, tested release is available, run `node build.js` and `node tests/run_all.js`, then in the existing Edge project choose «بارگذاری فایل» and select the final `dist/worker.js`. This operation is unverified on Arvan; retain a rollback to the currently live V1.
 3. On a *private staging copy* of a future tested release, open `/__diag`. It currently reports unavailable features honestly; never publish secrets or raw private configuration. Check the result before relying on platform capabilities.
 4. After the missing features are built, check the game, offline fallback, and—if implemented—rankings/challenge links on an actual phone. Obtain organizer guidance on pseudonymous names and moderation before enabling rankings.
