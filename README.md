@@ -120,3 +120,6 @@ features or contest compliance have passed QA.
 
 ### Current delivery change
 Personal leaderboard screens have been removed. Best score and local daily missions/streak remain; the only leaderboard being developed is the online daily board. Earlier historical descriptions of a personal board above are superseded.
+
+### Online prototype security warning
+The private build defaults to `x-real-ip`, or accepts an ordered comma-separated `TRUSTED_CLIENT_IP_HEADER`. Such headers are trustworthy only if the platform overwrites them; this is not verified for Arvan Edge. Missing/invalid IP skips per-IP limiting; an isolate-local write cap remains. If S3 conditional create is unsupported, nonce protection is best effort, not globally atomic. LITE checks plausibility, not replay. `/__diag` writes and deletes small temporary test objects and caches its result for 60 seconds; usage may have costs. Do not publish secret-bearing bundles as static files. Public builds have no storage.

@@ -1,6 +1,7 @@
 'use strict';
 // Standalone heuristic validation. It is not replay verification or proof of legitimate play.
 const {verifyTicket}=require('./tickets');
+const recentNonces=new Map();
 function plausibleRun(run,ticket,now){
  if(!run||typeof run!=='object'||!ticket||ticket.kind!=='start'||!Number.isSafeInteger(now))return false;
  const {seed,score,served,fastCount,maxCombo,timeouts,duration}=run;
@@ -15,6 +16,6 @@ async function validateAndConsume({key,token,run,now=Math.floor(Date.now()/1000)
  if(!store||typeof store.putIfAbsent!=='function')return {ok:false,reason:'unavailable'};
  let ticket;try{ticket=await verifyTicket({key,kind:'start',token,now,subtle})}catch(e){return {ok:false,reason:'unavailable'}}
  if(!ticket||!plausibleRun(run,ticket,now))return {ok:false,reason:'invalid'};
- try{const created=await store.putIfAbsent('nonce/'+ticket.nonce,'1');return created?{ok:true,ticket}:{ok:false,reason:'replayed'}}catch(e){return {ok:false,reason:'unavailable'}}
+ try{for(const [n,expiry] of recentNonces){if(expiry<=now)recentNonces.delete(n)}if(recentNonces.has(ticket.nonce))return {ok:false,reason:'replayed'};if(recentNonces.size>=10000)return {ok:false,reason:'unavailable'};recentNonces.set(ticket.nonce,ticket.exp);const k='nonce/'+ticket.nonce;if(typeof store.get==='function'&&await store.get(k))return {ok:false,reason:'replayed'};const created=await store.putIfAbsent(k,'1');return created?{ok:true,ticket}:{ok:false,reason:'replayed'}}catch(e){return {ok:false,reason:'unavailable'}}
 }
 module.exports={plausibleRun,validateAndConsume};

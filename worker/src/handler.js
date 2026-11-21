@@ -46,7 +46,7 @@ async function handleRequest(request) {
    return new Response(bytes,{headers:{'Content-Type':'image/png','Cache-Control':'public, max-age=86400'}});
   }
   if (url.pathname === '/api/ping') return jsonResponse({ok:true,t:Date.now(),online:false});
-  if (url.pathname === '/__diag') return jsonResponse(await diagnostics());
+  if (url.pathname === '/__diag') { const report=await diagnostics();report.requestHeaderNames=Array.from(request.headers.keys()).map(h=>h.toLowerCase()).sort();report.identityHeaderPresent=false;report.onlineConfigured=false;return jsonResponse(report); }
   if (url.pathname === '/api/daily') { try {return jsonResponse(dailyAt(new Date()))} catch(e) {return jsonResponse({ok:false,message:'تاریخ تهران در دسترس نیست'},503)} }
   if (url.pathname.startsWith('/api/')) return jsonResponse({ok:false, message:'این قابلیت هنوز فعال نیست.'},503);
   return new Response('Not found', {status:404});
