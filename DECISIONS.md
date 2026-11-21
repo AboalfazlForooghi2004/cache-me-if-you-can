@@ -143,3 +143,6 @@ The isolated store exposes sorted prefix listing, up to 100 keys per request; no
 
 ## Continuation — isolated online flow
 `online_service.js` exercises daily signed starts, score plausibility with single-use nonce, and a bounded sorted/deduplicated board via injected storage. It enforces origin and rate limits only when the host supplies a trustworthy client identity, and fails closed otherwise. It is deliberately not wired into deployable bundles: target platform identity, conditional writes, listing/order, cleanup, moderation, and practical LITE calibration are unverified. LITE is not replay validation and cannot prove legitimate play. Listing scans at most 100 candidate keys.
+
+## Continuation — isolated signed challenge prototype
+The standalone service mints HMAC-bound challenge links and a separate challenge score namespace; date and seed are signed, and start-ticket lifetime cannot exceed the challenge lifetime. Mock-only tests cover round-trip, separation from daily board and expiry. No client or deployed handler consumes these endpoints yet. A link signature does not establish fair play or atomic store behavior.
