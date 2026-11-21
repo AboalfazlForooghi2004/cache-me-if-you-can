@@ -104,3 +104,6 @@ Added CONFIG `golden:{chance:0.04,fastPoints:5,slaGain:3}`; selection is an inde
 
 ## Continuation — Turbo
 Added CONFIG `turbo:{threshold:12,duration:6,cooldown:20}`: automatic activation on reaching combo threshold and after cooldown, maximum node warmth while active, doubled fast SLA gain and multiplier (6× cap). Triggering completion itself uses pre-Turbo scoring. Smoke checks and 50-seed survival tests pass; screenshot is curated, not natural activation evidence.
+
+## Continuation — non-seasonal daily modifiers
+The existing date seed hash also selects one of eight per-run modifier objects; no global CONFIG is mutated. Each is described on pre-run and personal daily board, named in menu and run banner, and applied entirely offline. Local date-specific top-10 is stored separately from the general board; it is not global. Retry preserves the run date. Daily modifier tests use 15 simulation seeds each and assert human >=60 s, expert/greedy >=150 s median. Old seasonal event was renamed to neutral `surge` with unchanged multipliers.

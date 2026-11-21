@@ -146,6 +146,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <button class="btn primary" id="btnPlay">▶ شروع بازی</button>
   <button class="btn" id="btnDaily">📅 چالش امروز — <span id="dailyLabel"></span></button>
   <div class="bestchip" id="dailyBest" style="color:var(--turq)"></div>
+  <button class="btn ghost" id="btnDailyBoard">📅 جدول شخصی امروز</button>
   <button class="btn ghost" id="btnLocalBoard">🏆 جدول شخصی</button>
   <button class="btn ghost" id="btnHow">❓ چطور بازی کنم؟</button>
   <div class="menurow">
@@ -155,6 +156,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg0);c
   <div class="footer">ساخته‌شده برای مسابقه بازی‌سازی آروان‌کلاد · <span dir="ltr">#GameOnEdge</span></div>
 </div></div>
 
+<div class="overlay" id="ovDailyIntro"><div class="card"><h2>📅 چالش امروز</h2><div class="sub" id="dailyIntro"></div><div class="tip">این چالش روی دستگاه ذخیره می‌شود؛ ثبت جهانی فعال نیست.</div><button class="btn primary" id="btnDailyStart">شروع چالش</button><button class="btn ghost" id="btnDailyBack">برگرد</button></div></div>
+<div class="overlay" id="ovDailyBoard"><div class="card"><h2>📅 جدول شخصی امروز</h2><div class="sub" id="dailyBoardInfo"></div><div class="sub">فقط روی همین دستگاه؛ جدول سراسری نیست.</div><div id="dailyBoardRows"></div><button class="btn primary" id="btnDailyBoardBack">برگرد</button></div></div>
 <div class="overlay" id="ovLocalBoard"><div class="card">
   <h2>🏆 جدول شخصی</h2><div class="sub">فقط روی همین دستگاه ذخیره می‌شود؛ جدول سراسری نیست.</div>
   <div id="localBoardRows"></div>
@@ -231,7 +234,7 @@ score:{base:10,comboStep:4,comboStepBonus:0.25,comboMaxMult:3.0,botKill:5,perfec
 sla:{start:100,fastGain:0.25,timeout:-8,botLeak:-6,friendlyFire:-3,waveClearGain:5,lowThreshold:20},
 bots:{baseSpeed:230,bossSpeedMul:1.15,attackSec:3.0,telegraphSec:2.0,spawnSpreadSec:3.0,countBase:5,countPerWave:2,countMax:24,bossCountMul:1.8,killRadiusPx:24,friendlyRadiusPx:16,friendlyCooldown:1.5},
 waves:{first:34,gapMin:28,gapMax:36,bossEvery:3},
-events:{first:18,gapMin:24,gapMax:36,yalda:{dur:10,globalMul:1.8,scoreMul:1.5},blackfriday:{dur:9,cityMul:6,globalMul:1.2,heavy:true,heavyCost:2},viral:{dur:7,cityMul:10,globalMul:1.1},outage:{dur:6}},
+events:{first:18,gapMin:24,gapMax:36,surge:{dur:10,globalMul:1.8,scoreMul:1.5},blackfriday:{dur:9,cityMul:6,globalMul:1.2,heavy:true,heavyCost:2},viral:{dur:7,cityMul:10,globalMul:1.1},outage:{dur:6}},
 conflictGuard:{untilT:120,minSep:6,shift:8},
 input:{holdMs:170,holdWaveMs:250,dragPickPx:18},
 tutorial:{slowStartUntil:25,slowLambda:0.9,slaFloorUntil:25,slaFloor:70,firstWaveBots:4}};
@@ -262,17 +265,29 @@ const Store={mem:null,load:function(){try{var s=localStorage.getItem('cmiyc.v1')
 function defaultData(){return{settings:{sound:true,haptics:true,reducedMotion:null,lang:'fa'},best:0,top:[],daily:{},tutorialSeen:false,runs:0}}
 let DB=defaultData();try{var _d=Store.load();if(_d&&_d.settings)DB=_d}catch(e){}
 function saveDB(){try{Store.save(DB)}catch(e){}}
-function tehranDate(){try{var q=new URLSearchParams(location.search);var dd=q.get('daily');if(dd)return dd;return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran'}).format(new Date()).replace(/-/g,'')}catch(e){return '20261130'}}
+function tehranDate(){try{var q=new URLSearchParams(location.search);var dd=q.get('daily');if(dd&&/^\d{8}$/.test(dd))return dd;var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());var get=function(k){return parts.find(function(p){return p.type===k}).value};return get('year')+get('month')+get('day')}catch(e){return '20261130'}}
 function jalaliLabel(){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{day:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(new Date())}catch(e){return ''}}
 /* ================= SIM ================= */
 let S=null;
+// Each day uses exactly one modifier; effects are deterministic and per-run, never global CONFIG mutations.
+const DAILY_MODIFIERS=[
+ {id:'steady',name:'شبکه پایدار',desc:'ترافیک کمتر',spawn:0.96},
+ {id:'rush',name:'رفت‌وآمد سریع',desc:'درخواست‌ها کمی پرتعدادترند',spawn:1.04},
+ {id:'patient',name:'کاربران صبور',desc:'زمان انتظار بیشتر',patience:1.08},
+ {id:'warm',name:'کَش گرم',desc:'نودها سریع‌تر گرم می‌شوند',warmth:1.25},
+ {id:'efficient',name:'لبه چابک',desc:'رفت‌وبرگشت لبه سریع‌تر است',edge:0.9},
+ {id:'resilient',name:'شبکه مقاوم',desc:'آسیب ترافیک مخرب کمتر است',leak:0.8},
+ {id:'recovery',name:'بازیابی سریع',desc:'پاسخ سریع رضایت بیشتری می‌دهد',gain:1.3},
+ {id:'reward',name:'پاداش مسیر',desc:'امتیاز پاسخ‌ها بیشتر است',score:1.1}
+];
+function dailyModifier(date){return DAILY_MODIFIERS[hash32(Number(date)^0xC0FFEE)%DAILY_MODIFIERS.length]}
 function newRun(seed,mode,opts){
  opts=opts||{};
  var tut=!!opts.tutorial;
  var rngSpawn=mulberry32(hash32(seed^0x5EED));
  var rngTl=mulberry32(hash32(seed^0x71E));
  var tl={events:[],waves:[],evI:0,waveI:0};
- var t=CONFIG.events.first,prev=null;var types=['yalda','blackfriday','viral','outage'];
+ var t=CONFIG.events.first,prev=null;var types=['surge','blackfriday','viral','outage'];
  while(t<900){var ty=types[Math.floor(rngTl()*types.length)];if(ty===prev)ty=types[(types.indexOf(ty)+1)%types.length];tl.events.push({t:t,type:ty,u:rngTl()});prev=ty;t+=CONFIG.events.gapMin+rngTl()*(CONFIG.events.gapMax-CONFIG.events.gapMin)}
  t=CONFIG.waves.first;var k=1;
  while(t<900){tl.waves.push({t:t,k:k,boss:(k%CONFIG.waves.bossEvery===0)});t+=CONFIG.waves.gapMin+rngTl()*(CONFIG.waves.gapMax-CONFIG.waves.gapMin);k++}
@@ -280,7 +295,7 @@ function newRun(seed,mode,opts){
  while(changed&&guardPass<60){changed=false;guardPass++;
   for(var i=0;i<tl.events.length;i++)for(var j=0;j<tl.waves.length;j++){if(tl.events[i].t<CONFIG.conflictGuard.untilT&&Math.abs(tl.events[i].t-tl.waves[j].t)<CONFIG.conflictGuard.minSep){tl.events[i].t+=CONFIG.conflictGuard.shift;changed=true}}
  }
- S={phase:'play',mode:mode||'endless',seed:seed,t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
+ S={phase:'play',mode:mode||'endless',seed:seed,dailyDate:mode==='daily'?(opts.dailyDate||tehranDate()):null,modifier:mode==='daily'?dailyModifier(opts.dailyDate||tehranDate()):{},t:0,tutorial:tut,tutCur:-1,tutNext:0,tutShownAt:0,tutWave:false,tutWaveClear:false,
  rngSpawn:rngSpawn,rngTl:rngTl,score:0,combo:0,maxCombo:0,turboUntil:0,turboReadyAt:0,sla:CONFIG.sla.start,served:0,hits:0,misses:0,originServes:0,timeouts:0,latencySum:0,fastCount:0,
  nextReqId:1,nextNodeId:1,nextBotId:1,originInFlight:0,originAttackedUntil:0,
  cities:CITIES.map(function(c){return{id:c.id,x:c.x,y:c.y,w:c.w,serveNodeId:null,pending:0}}),
@@ -292,11 +307,11 @@ function newRun(seed,mode,opts){
 function emit(type,data){if(S)S.events.push(Object.assign({type:type},data||{}))}
 function effConcurrency(){return (S.t<S.originAttackedUntil)?CONFIG.origin.concurrency/2:CONFIG.origin.concurrency}
 function queueWait(){return Math.min(CONFIG.origin.queueMax,Math.max(0,S.originInFlight-effConcurrency())*CONFIG.origin.queuePerExtra)}
-function edgeOneWay(d){return CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit}
+function edgeOneWay(d){return (CONFIG.edge.oneWayBase+d*CONFIG.edge.perUnit)*(S.modifier.edge||1)}
 function originOneWay(x,y){return CONFIG.origin.baseOneWay+dist(x,y,CONFIG.origin.vx,CONFIG.origin.vy)*CONFIG.origin.perUnit}
-function globalMul(){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='yalda')return CONFIG.events.yalda.globalMul;if(e.type==='blackfriday')return CONFIG.events.blackfriday.globalMul;if(e.type==='viral')return CONFIG.events.viral.globalMul;return 1}
+function globalMul(){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='surge')return CONFIG.events.surge.globalMul;if(e.type==='blackfriday')return CONFIG.events.blackfriday.globalMul;if(e.type==='viral')return CONFIG.events.viral.globalMul;return 1}
 function cityMul(ci){if(!S.activeEvent)return 1;var e=S.activeEvent;if(e.type==='blackfriday'&&e.cityIdx===ci)return CONFIG.events.blackfriday.cityMul;if(e.type==='viral'&&e.cityIdx===ci)return CONFIG.events.viral.cityMul;return 1}
-function lambdaAt(t){var l=Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)*globalMul();if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
+function lambdaAt(t){var l=Math.min(CONFIG.spawn.max,CONFIG.spawn.base+CONFIG.spawn.slope*t)*globalMul()*(S.modifier.spawn||1);if(S.tutorial&&t<CONFIG.tutorial.slowStartUntil)l=CONFIG.tutorial.slowLambda;return Math.max(0.05,l)}
 function pickCity(){var u=S.rngSpawn();var total=0,i;var idxs=[];
  if(S.tutorial&&S.t<CONFIG.tutorial.slowStartUntil){idxs=[0,2,1]}else{for(i=0;i<S.cities.length;i++)idxs.push(i)}
  for(i=0;i<idxs.length;i++)total+=S.cities[idxs[i]].w*cityMul(idxs[i]);
@@ -313,7 +328,7 @@ function assignReq(r,prepend){
  if(best){
   var roll=hash32(S.seed^Math.imul(r.id,0x9E3779B1))/4294967296;
   var hit=roll<best.warmth;
-  best.warmth=Math.min(CONFIG.nodes.warmthMax,best.warmth+CONFIG.nodes.warmthGain);
+  best.warmth=Math.min(CONFIG.nodes.warmthMax,best.warmth+CONFIG.nodes.warmthGain*(S.modifier.warmth||1));
   best.load+=cost;best.lastAssignT=S.t;r.nodeId=best.id;
   var ow=edgeOneWay(bd);
   if(hit){r.route='hit';r.phases.push({k:'out',dur:ow},{k:'proc',dur:CONFIG.edge.process},{k:'back',dur:ow})}
@@ -329,7 +344,7 @@ function spawnDue(){
   var u=S.rngSpawn();var lam=lambdaAt(S.t);var gap=-Math.log(1-Math.min(0.999999,u))/lam;S.nextArrival+=gap;
   var ci=pickCity();var u2=S.rngSpawn();
   if(S.requests.length>=CONFIG.spawn.maxLiveRequests)continue;
-  var pat=Math.max(CONFIG.patience.min,CONFIG.patience.start-CONFIG.patience.slope*S.t);
+  var pat=Math.max(CONFIG.patience.min,CONFIG.patience.start-CONFIG.patience.slope*S.t)*(S.modifier.patience||1);
   var heavy=!!(S.activeEvent&&S.activeEvent.type==='blackfriday'&&S.activeEvent.cityIdx===ci);
   var r={id:S.nextReqId++,city:ci,spawnT:S.t,patience:pat,heavy:heavy,nodeId:null,route:'origin',phases:[],assignT:S.t,doneAt:0,totalDur:0,done:false,released:false,cost:1,originCounted:false};
   r.golden=(hash32(S.seed^Math.imul(r.id,0x27d4eb2d))/4294967296<CONFIG.golden.chance)&&!S.requests.some(function(q){return q.golden&&!q.done});
@@ -389,7 +404,7 @@ function killBot(b){b.alive=false;S.score+=CONFIG.score.botKill;if(S.activeWave)
 function leakBot(b){
  b.alive=false;
  if(S.activeWave)S.activeWave.botsLeaked++;
- S.sla+=CONFIG.sla.botLeak;
+ S.sla+=CONFIG.sla.botLeak*(S.modifier.leak||1);
  if(b.targetNodeId){var n=nodeById(b.targetNodeId);if(n&&n.state==='online'){n.state='attacked';n.untilT=S.t+CONFIG.bots.attackSec;rerouteNode(n.id);n.load=0;emit('nodeAttacked',{node:n.id})}}
  else{S.originAttackedUntil=S.t+CONFIG.bots.attackSec}
  emit('botLeaked',{x:b.x,y:b.y});
@@ -451,16 +466,16 @@ function stepSim(dt){
    r.done=true;releaseReq(r);
    var elapsed=S.t-r.spawnT;var remFrac=clamp((r.patience-elapsed)/r.patience,0,1);
    var mult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
-   var ymul=(S.activeEvent&&S.activeEvent.type==='yalda')?CONFIG.events.yalda.scoreMul:1;
+   var ymul=(S.activeEvent&&S.activeEvent.type==='surge')?CONFIG.events.surge.scoreMul:1;
    var damp=S.t<CONFIG.score.lateDampFrom?1:Math.max(CONFIG.score.lateDampMin,1-(S.t-CONFIG.score.lateDampFrom)*CONFIG.score.lateDampPerSec);
    var clutch=remFrac<0.12;
-   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*Math.min(6,mult*(S.t<S.turboUntil?2:1))*ymul*damp*(clutch?2:1));
+   var pts=Math.round(CONFIG.score.base*(0.5+remFrac)*Math.min(6,mult*(S.t<S.turboUntil?2:1))*ymul*damp*(clutch?2:1)*(S.modifier.score||1));
    var fast=elapsed<=CONFIG.fastSec;
    var goldenFast=!!r.golden&&fast;
    if(goldenFast){pts*=CONFIG.golden.fastPoints;S.sla=Math.min(100,S.sla+CONFIG.golden.slaGain)}
    var oldMult=mult;
    if(clutch)S.sla=Math.min(100,S.sla+1);
-   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
+   if(fast&&!clutch){S.combo++;S.maxCombo=Math.max(S.maxCombo,S.combo);S.sla=Math.min(100,S.sla+CONFIG.sla.fastGain*(S.modifier.gain||1)*(S.t<S.turboUntil?2:1));S.fastCount++;if(S.combo>=CONFIG.turbo.threshold&&S.t>=S.turboReadyAt){S.turboUntil=S.t+CONFIG.turbo.duration;S.turboReadyAt=S.turboUntil+CONFIG.turbo.cooldown;emit('turboStart',{})}}
    var newMult=Math.min(CONFIG.score.comboMaxMult,1+CONFIG.score.comboStepBonus*Math.floor(S.combo/CONFIG.score.comboStep));
    S.score+=pts;S.served++;S.latencySum+=elapsed;
    if(r.route==='hit'){S.hits++;var hn=nodeById(r.nodeId);if(hn)hn.hitsServed++}else if(r.route==='miss')S.misses++;else S.originServes++;
@@ -792,20 +807,20 @@ function updateHUD(){
  }
 }
 function showOverlay(id){document.querySelectorAll('.overlay').forEach(function(o){o.classList.remove('show')});if(id)$(id).classList.add('show')}
-function startRun(mode, dailySeed, dailyOnline){
+function startRun(mode, dailySeed, dailyOnline, dailyDate){
  AudioSys.resume();
  var seed;
- if(mode==='daily'){seed=Number.isInteger(dailySeed)?dailySeed:hash32(parseInt(tehranDate(),10)^0xC0FFEE)}
+ if(mode==='daily'){seed=Number.isInteger(dailySeed)?dailySeed:hash32(parseInt(dailyDate||tehranDate(),10)^0xC0FFEE)}
  else{var q=new URLSearchParams(location.search);var sq=q.get('seed');seed=sq!==null?parseInt(sq,10):Math.floor(Math.random()*1e9)}
  var _q=new URLSearchParams(location.search);var tut=!DB.tutorialSeen&&mode==='endless'&&_q.get('notut')!=='1';
- newRun(seed,mode,{tutorial:tut});
+ newRun(seed,mode,{tutorial:tut,dailyDate:dailyDate||tehranDate()});
  if(mode==='daily')S.dailyOnline=!!dailyOnline;
  particles=[];floaters=[];trail=[];selectedNode=null;trayEls=null;traySig='';
  $('hud').style.display='flex';showOverlay(null);resize();
  if(tut){$('tutSkip').style.display='block';tutShow(0)}else{$('tutSkip').style.display='none'}
- banner(mode==='daily'?(dailyOnline?'📅 سید لبه؛ ثبت امتیاز فعال نیست':'📅 آفلاین — ثبت نمی‌شه'):'▶ بازی شروع شد!','good');
+ banner(mode==='daily'?'📅 '+S.modifier.name+' — جدول شخصی':'▶ بازی شروع شد!','good');
 }
-function restartRun(){clearResume();if(S)startRun(S.mode)}
+function restartRun(){clearResume();if(S)startRun(S.mode,S.mode==='daily'?S.seed:undefined,S.dailyOnline,S.dailyDate)}
 let resumeIv=null,resuming=false;
 function clearResume(){if(resumeIv){clearInterval(resumeIv);resumeIv=null}resuming=false;try{$('countdown').style.display='none'}catch(e){}}
 function pauseGame(){if(!S||S.phase!=='play')return;clearResume();S.phase='pause';showOverlay('ovPause')}
@@ -821,20 +836,20 @@ function resumeGame(){
 function toMenu(){clearResume();S=null;$('hud').style.display='none';showOverlay('ovMenu');refreshMenu()}
 function refreshMenu(){
  setText('menuBest','🏆 بهترین رکورد: '+toFa(DB.best.toLocaleString('en-US').replace(/,/g,'٬')));
- setText('dailyLabel',jalaliLabel()||tehranDate());
+ setText('dailyLabel',(jalaliLabel()||tehranDate())+' · '+dailyModifier(tehranDate()).name);
  var dd=tehranDate();var rec=DB.daily[dd];setText('dailyBest',rec?('📅 بهترین امروز: '+toFa(rec.best)):'📅 امروز هنوز بازی نکردی');
 }
 function gameOverUI(){
  var f=S.finalStats;var r=rankFor(f.score);
  setText('overScore',toFa(f.score.toLocaleString('en-US').replace(/,/g,'٬')));
  setText('overRank',r[1]);setText('overFunny',r[2]);
- setText('overMode',S.mode==='daily'?('📅 چالش '+ (jalaliLabel()||'')+' — ثبت امتیاز فعال نیست'):'حالت آزاد');
+ setText('overMode',S.mode==='daily'?('📅 چالش '+S.dailyDate+' · '+S.modifier.name+' — جدول شخصی'):'حالت آزاد');
  setText('stLat',toFa(f.ms));setText('stHit',toFa(f.hitPct)+'٪');setText('stCombo','×'+toFa(f.maxCombo));setText('stTime',fmtTime(f.sec));
  setText('overTip','💡 '+TIPS[Math.floor(Math.random()*TIPS.length)]);
  var isBest=f.score>DB.best;
  if(isBest)DB.best=f.score;
- DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
- if(S.mode==='daily'){var dd=tehranDate();if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++}
+ DB.runs++;DB.top.push({score:f.score,ms:f.ms,sec:Math.round(f.sec),ts:Date.now(),mode:S.mode,date:S.dailyDate});DB.top.sort(function(a,b){return b.score-a.score});DB.top=DB.top.slice(0,10);
+ if(S.mode==='daily'){var dd=S.dailyDate;if(!DB.daily[dd])DB.daily[dd]={best:0,runs:0};DB.daily[dd].best=Math.max(DB.daily[dd].best,f.score);DB.daily[dd].runs++;if(!Array.isArray(DB.daily[dd].top))DB.daily[dd].top=[];DB.daily[dd].top.push({score:f.score,ts:Date.now()});DB.daily[dd].top.sort(function(a,b){return b.score-a.score});DB.daily[dd].top=DB.daily[dd].top.slice(0,10)}
  saveDB();
  setText('overBest',isBest?'🎉 رکورد جدید!':'🏆 بهترین رکورد: '+toFa(DB.best));
  showOverlay('ovOver');
@@ -871,7 +886,7 @@ function handleEvents(){
   else if(ev.type==='waveWarn'){banner(ev.boss?'⚠ ترافیک مخرب در راهه! فیلترش کن 🛡':'⚠ ترافیک مخرب در راهه! فیلترش کن 🛡','warn');AudioSys.siren();vigT=1;vibrate(60);if(S.tutorial)S.tutWave=true}
   else if(ev.type==='waveClear'){if(S.tutorial&&ev.k===1)S.tutWaveClear=true;if(ev.perfect){banner('فیلتر بی‌نقص! 🛡 +'+toFa(CONFIG.score.perfectWave),'gold');flashT=1;AudioSys.fanfare();vibrate(40)}else banner('موج تموم شد','good')}
   else if(ev.type==='eventStart'){
-   var names={yalda:'🍉 شب یلداست! همه بیدارن، همه آنلاین‌ان',blackfriday:'🛒 بلک‌فرایدی! شهر داره می‌ترکه',viral:'🔥 توییتت وایرال شد! یه شهر شلوغ شد',outage:'🔌 قطعی برق! یکی از نودها آفلاین شد'};
+   var names={surge:'📡 موج ترافیک! شبکه شلوغ شده',blackfriday:'🛒 بلک‌فرایدی! شهر داره می‌ترکه',viral:'🔥 توییتت وایرال شد! یه شهر شلوغ شد',outage:'🔌 قطعی برق! یکی از نودها آفلاین شد'};
    banner(names[ev.etype]||'رویداد!','gold');AudioSys.stinger();vibrate(20);
   }
   else if(ev.type==='slotUnlocked'){toast('یه نود جدید باز شد!');AudioSys.unlock();vibrate(15)}
@@ -962,12 +977,16 @@ async function startDaily(){
   if(location.protocol==='http:'||location.protocol==='https:'){
    var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
    var timer;
-   try{var res=await Promise.race([fetch('/api/daily',ctrl?{signal:ctrl.signal}:{}),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},1800)})]);if(!res.ok)throw Error('unavailable');var data=await res.json();if(!Number.isInteger(data.seed)||!/^\d{8}$/.test(data.date))throw Error('invalid');startRun('daily',data.seed,true);return}finally{clearTimeout(timer)}
+   try{var res=await Promise.race([fetch('/api/daily',ctrl?{signal:ctrl.signal}:{}),new Promise(function(_,reject){timer=setTimeout(function(){if(ctrl)ctrl.abort();reject(Error('timeout'))},1800)})]);if(!res.ok)throw Error('unavailable');var data=await res.json();if(!Number.isInteger(data.seed)||!/^\d{8}$/.test(data.date))throw Error('invalid');if(data.date!==tehranDate()||data.seed!==hash32(parseInt(data.date,10)^0xC0FFEE))throw Error('date mismatch');startRun('daily',data.seed,true,data.date);return}finally{clearTimeout(timer)}
   }
  }catch(e){}finally{dailyStarting=false}
  startRun('daily');
 }
-$('btnDaily').addEventListener('click',startDaily);
+$('btnDaily').addEventListener('click',function(){var m=dailyModifier(tehranDate());setText('dailyIntro',m.name+' — '+m.desc);showOverlay('ovDailyIntro')});
+$('btnDailyStart').addEventListener('click',startDaily);
+$('btnDailyBack').addEventListener('click',function(){showOverlay('ovMenu')});
+$('btnDailyBoard').addEventListener('click',function(){var dd=tehranDate(),m=dailyModifier(dd);setText('dailyBoardInfo',dd+' · '+m.name+' — '+m.desc);var rows=$('dailyBoardRows');rows.textContent='';var list=DB.daily[dd]&&Array.isArray(DB.daily[dd].top)?DB.daily[dd].top.slice(0,10):[];if(!list.length)rows.textContent='هنوز رکوردی ثبت نشده.';list.forEach(function(r,i){var row=document.createElement('div');row.className='setrow';row.textContent=toFa(i+1)+' · '+toFa(Number(r.score)||0);rows.appendChild(row)});showOverlay('ovDailyBoard')});
+$('btnDailyBoardBack').addEventListener('click',function(){showOverlay('ovMenu')});
 $('btnLocalBoard').addEventListener('click',function(){
  var rows=$('localBoardRows');rows.textContent='';var list=(Array.isArray(DB.top)?DB.top:[]).slice(0,10);
  if(!list.length){rows.textContent='هنوز رکوردی ثبت نشده.'}
@@ -997,7 +1016,7 @@ $('tglHaptic').addEventListener('click',function(){DB.settings.haptics=!DB.setti
 $('tglMotion').addEventListener('click',function(){DB.settings.reducedMotion=!reducedMotion();saveDB();syncToggles()});
 $('btnReset').addEventListener('click',function(){DB=defaultData();saveDB();syncToggles();refreshMenu();toast('اطلاعات پاک شد')});
 $('tutSkip').addEventListener('click',function(){DB.tutorialSeen=true;saveDB();$('tut').classList.remove('show');$('tutSkip').style.display='none';if(S&&S.tutorial){S.tutorial=false;S.tutCur=-1}});
-window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel};
+window.__game={CONFIG:CONFIG,get state(){return S},get DB(){return DB},get mapScale(){return mapScale},get loopErrors(){return loopErr},newRun:function(seed,mode,opts){return newRun(seed,mode,opts)},step:function(dt){stepSim(dt||CONFIG.DT)},applyAction:applyAction,snapshot:snapshot,placeNode:placeNode,moveNode:moveNode,applySwipe:applySwipe,render:render,w2s:w2s,s2w:s2w,loop:loopBody,startRun:startRun,toMenu:toMenu,startEvent:startEvent,leakBot:leakBot,slotLabel:slotLabel,dailyModifier:dailyModifier};
 resize();syncToggles();refreshMenu();initDemo();
 if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load('400 12px Vazirmatn'),document.fonts.load('700 12px Vazirmatn')]).then(function(){buildStatic()}).catch(function(){})}
 requestAnimationFrame(loop);

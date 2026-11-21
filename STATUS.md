@@ -14,11 +14,11 @@
 - Stage 6 is **partial**: assets and limited screenshot QA only; not all requested screens exist.
 
 ## Cut / not implemented in this run
-- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; Turbo; second chance; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
+- Mega-packet boss; campaign levels 6–8; streak/missions; global board; share-card V2 polish; campaign levels 1–5; all upgrades; second chance; name flow; LITE validation; SigV4/S3/private builds; adaptive music and full hype. These include requested never-cut items: this is an incomplete delivery, not a claim of a shippable release.
 - Campaign win rates and upgrade pick rates cannot be reported because those features do not exist.
 
 ## Platform and delivery
-All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched. The environment does not expose `GITHUB_TOKEN`; unauthenticated push was rejected. A complete local output folder, repository archive and git bundle are generated for manual delivery. Do not upload this unfinished prototype over live V1.
+All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched. The initial unauthenticated push was rejected; authenticated pushes subsequently succeeded. The output folder includes a repository archive and git bundle for manual delivery. Do not upload this unfinished prototype over live V1.
 
 ## Continuation — delivery slice
 - GitHub `main` was fast-forwarded to `e4eb018` and historical commit `ab1c4e3` was tagged `v1-live` before this slice. The tag is a historical anchor; correspondence to the owner's live deployment is unverified.
@@ -27,9 +27,14 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — golden-request slice
 - Implemented deterministic golden selection at 4% per request via seed/id hash, at most one live, ×5 score and +3 SLA when fast, with a gold mark and burst. `tests/golden.js` verifies the fast reward, one-live limit and seeded repeatability. The 50-seed existing soak and difficulty bands pass. `tests/screenshots/stage-current/390x844-golden.png` is a curated browser capture (golden flag set through test API), not evidence of natural spawn frequency.
-- CONFIG added: golden `{chance:0.04, fastPoints:5, slaGain:3}`. Score percentiles changed, as recorded in the final harness output. Turbo, second chance, all upgrade picks, eight daily modifiers, replay validation and the global leaderboard remain unimplemented.
+- CONFIG added: golden `{chance:0.04, fastPoints:5, slaGain:3}`. Score percentiles changed, as recorded in the final harness output. At that slice Turbo, second chance, upgrades, daily modifiers, replay validation and the global leaderboard were unimplemented; later slices below supersede that status.
 
 ## Continuation — Turbo slice
 - Implemented deterministic automatic Turbo on combo ≥12: 6s active, then 20s cooldown. Active ticks maximize node warmth, double fast SLA gain and double the score multiplier (capped at 6×), with gold border and activation banner. Triggering request itself earns ordinary score; effect starts after it completes. `tests/turbo.js` exercises activation, warmth, duration/cooldown. `390x844-turbo.png` is a curated state capture, not a natural play-through.
 - Latest `node tests/run_all.js`: ALL TESTS PASS, including existing bands and 50-seed soak. Survival p10/p50/p90: lazy 32/42/50, novice 74/80/110, human 77/105/138, expert 193/313/600, greedy 158/342/600 seconds. Scores: lazy 642/936/1145, novice 9971/14392/24191, human 14485/23678/38433, expert 68289/110448/184636, greedy 52791/119312/184416. These are ordinary-mode results, not modifier/campaign results.
-- `CONFIG.turbo={threshold:12,duration:6,cooldown:20}`. Features earlier listed as missing remain missing except golden and Turbo; no upgrade choices, second chance, or daily modifiers yet.
+- `CONFIG.turbo={threshold:12,duration:6,cooldown:20}`. Features earlier listed as missing remain missing except golden and Turbo; no upgrade choices, second chance, at that point; daily modifiers were added in the later slice below.
+
+## Continuation — Tehran daily modifiers
+- Eight non-seasonal named modifiers are chosen by the Tehran date hash and apply deterministic per-run effects (traffic, patience, warmth, edge speed, damage, recovery, points). Name and description appear in pre-run and personal daily board; the name also appears on the menu and at run start. Daily board is separately stored per date, only on the device. Seed/date are preserved when retrying, including across midnight. The same-origin seed endpoint is accepted only if date and hash match the locally selected Tehran date; offline mode remains playable. Historical generic event was renamed from seasonal copy to a neutral traffic surge.
+- `tests/daily_modifiers.js` covers all eight modifiers with 15 seeds each and requires human median >=60 s, expert/greedy >=150 s. Sample dates and medians human/expert/greedy: rush 107/203/232, warm 107/358/313, patient 109/358/313, resilient 109/358/313, steady 109/501/527, efficient 108/513/514, recovery 109/358/313, reward 108/358/313 seconds. These are simulations, not human/device measurements.
+- `tests/visual_stage.py` passed seven viewports; 390x844 daily intro and local board were additionally checked in Chromium. User-scrollable menu card on the shortest screen still needs layout polish. No Arvan deployment tested.

@@ -34,10 +34,10 @@
 - **گرمای کَش:** هر هیت گرما و احتمال هیت بعدی را زیاد می‌کند؛ نودِ بی‌کار سرد می‌شود؛ جابه‌جایی/قطعی کَش را می‌شوید.
 - **SLA / رضایت:** تایم‌اوت ‎−۸، نشت ترافیک مخرب ‎−۶، آتش خودی ‎−۳؛ صفر = باخت. سروِ سریع رضایت می‌افزاید.
 - **امتیاز × کمبو:** سرو سریع پشت‌سرهم کمبو می‌سازد (سقف ×۳)؛ تایم‌اوت کمبو را می‌شکند. رشد امتیاز بعد از ۱۲۰ ثانیه مهار می‌شود (ضریب تا ۰٫۵) تا واریانس محدود بماند.
-- **رویدادها:** 🍉 شب یلدا (ترافیک جهانی ×۱٫۸)، 🛒 بلک‌فرایدی (یک شهر ×۶ + درخواست سنگین)، 🔥 وایرال (یک شهر ×۱۰)، 🔌 قطعی برق (یک نود ۶ ثانیه آفلاین).
+- **رویدادها:** 📡 موج ترافیک (ترافیک جهانی ×۱٫۸)، 🛒 بلک‌فرایدی (یک شهر ×۶ + درخواست سنگین)، 🔥 وایرال (یک شهر ×۱۰)، 🔌 قطعی برق (یک نود ۶ ثانیه آفلاین).
 - **موج‌های DDoS:** بسته‌های ترافیک مخرب از مرزها به سمت نودها می‌آیند؛ سوایپ آن‌ها را فیلتر می‌کند. هر ۳ موج یک موج بزرگ (باس). موج بی‌نقص = ‎+۳۰۰ امتیاز و ‎+۵ رضایت.
 - **آموزش:** زیرنویس‌های راهنما (هر کدام ≥۲٫۵ ثانیه می‌مانند و پس از ~۵ ثانیه خودکار پنهان می‌شوند)؛ با پاک‌کردن اولین موج یا رسیدن به ۷۰ ثانیه تمام می‌شود و دیگر تکرار نمی‌شود. در ۲۵ ثانیه‌ی اول شروع کند و کف رضایت ۷۰ است.
-- **چالش روزانه:** سید قطعی از تاریخ تهران؛ کارت اشتراک ۱۰۸۰×۱۳۵۰ با fallback کپی/دانلود.
+- **چالش روزانه:** سید و یکی از هشت تغییر بازی از تاریخ تهران؛ جدول روزانه فقط محلی است. کارت اشتراک ۱۰۸۰×۱۳۵۰ با fallback کپی/دانلود.
 
 ## رتبه‌ها (کالیبره‌شده روی درصدک بات‌ها)
 
@@ -107,7 +107,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 
 Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
 `src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`
-and `output/` copies. Shared simulation extraction, replay validation and private S3
+`dist/worker.lite.js` (without OG image), and `output/` copies. Both workers remain store NONE / validation NONE. Shared simulation extraction, replay validation and private S3
 builds are **not implemented**. The build refuses secret/storage environment variables.
 `/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
 replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.

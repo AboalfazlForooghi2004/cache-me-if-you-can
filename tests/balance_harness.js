@@ -132,8 +132,8 @@ function makePolicy(policy, S, rngSeed) {
   };
 }
 
-function runBot(seed, policy, maxT) {
-  G.newRun(seed, 'endless', { tutorial: false });
+function runBot(seed, policy, maxT, dailyDate) {
+  G.newRun(seed, dailyDate?'daily':'endless', { tutorial: false, dailyDate });
   const S = G.state;
   const tick = makePolicy(policy, S, seed * 7919 + 17);
   let t = 0;
