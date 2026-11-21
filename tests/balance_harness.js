@@ -18,6 +18,7 @@ function fakeCtx() {
     get: (t, k) => {
       if (k === 'createLinearGradient' || k === 'createRadialGradient') return () => ({ addColorStop() {} });
       if (k === 'canvas') return {};
+      if (k === 'measureText') return text => ({width: String(text).length * 24});
       if (k === 'arc') return (...a) => { global.__arcs.push(a); };
       return () => {};
     },

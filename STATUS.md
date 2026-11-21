@@ -156,3 +156,6 @@ Implemented levels 6–8, persistent sequential unlocks, friendly stories, 25% d
 | 8 | 0% | 30% | 100% | 100% |
 
 This is bot-harness calibration, not human testing; the lazy policy already wins level 1, while it loses all of 6–8 as requested. Repeated-seed level-8 expert runs and gesture/cooldown/four-slot assertions pass. Selection/lock/victory/unlock of 8 and reload persistence were tested in Chromium at 390×844, 844×390 and 1280×720; older `visual_v2.py` and `node tests/run_all.js` pass. Real phone performance and actual players remain unverified; Arvan was not accessed. Stage 2 remaining limitations above still apply.
+
+### Share follow-up after Stage 3
+Added six distinct upgrade glyphs; `tests/share_card.js` exercises all modes with a mock canvas and a long Persian nickname, and checks the text template. `tests/share_logic.py` now also tests unsupported image download, in addition to native-share mock, cancellation, and text-copy fallback. All three sample cards and the three viewport sets were refreshed; `node tests/run_all.js` remains green. This supersedes the mock-canvas and upgrade-glyph limitations in Stage 2 above. Still not verified: <300ms on a real phone, iOS native share behavior, rigorous text-wrap/overlap for every possible field, and actual Arvan.

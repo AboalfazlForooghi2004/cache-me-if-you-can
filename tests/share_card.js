@@ -1,0 +1,3 @@
+'use strict';const assert=require('assert'),{G}=require('./balance_harness');
+for(const mode of ['endless','daily','campaign']){G.newRun(42,mode,{dailyDate:'20261118',campaignLevel:7,tutorial:false});const s=G.state;s.finalStats={score:123456,ms:125,hitPct:98,maxCombo:12,sec:90};s.turboCount=2;s.goldenCount=3;s.upgrades=['capacity','warmth'];G.DB.nickname='ابرکدرخشان';G.placeNode(0);const canvas=G.renderShareCard(s);assert.equal(canvas.width,1080);assert.equal(canvas.height,1350);const t=G.shareText(s);assert(t.startsWith('🛕 کَشَم کن اگه می‌تونی\n۱۲۳٬۴۵۶ امتیاز · لقب «'));assert(t.endsWith('\n#GameOnEdge'));if(mode==='daily')assert(t.includes('چالش امروز:'));}
+console.log('PASS mock canvas share cards all modes, long Persian nickname and text snapshot');
