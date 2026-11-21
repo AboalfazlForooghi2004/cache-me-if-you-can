@@ -64,3 +64,6 @@ All Arvan claims remain **UNVERIFIED ON ARVAN**. No Arvan account or CLI touched
 
 ## Continuation — SHA-256/HMAC fallback
 - Added a standalone JavaScript SHA-256/HMAC-SHA256 fallback and constant-time equal-length byte comparison. Local tests cross-check SHA and HMAC against Node crypto at padding/key boundaries and with 64 KiB inputs; WebCrypto parity also passes. The isolated SigV4 primitive now supports this fallback and the official AWS GET vector passes with and without WebCrypto. No secret, signed-start endpoint, validation or private bundle is enabled by this change; no performance or deployment claims on Arvan.
+
+## Continuation — signed ticket building block
+- Added standalone expiring, purpose-bound (`start` or `challenge`) HMAC tickets with 128-bit random nonces, bounded payloads, key-length requirement, canonical base64url, signature verification, expiry and future-issue checks. Unit tests exercise WebCrypto/fallback parity, purpose confusion, malformed/tampered tokens, expiry and missing secure randomness. These primitives are NOT exposed by the worker and do not themselves prevent replay; atomic nonce consumption, rate limits, game validation and private builds remain missing. Not independently audited or tested on Arvan.

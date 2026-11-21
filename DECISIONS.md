@@ -125,3 +125,6 @@ Added a WebCrypto S3 signing primitive and standalone GET / conditional-create a
 
 ## Continuation — cryptographic fallback
 Standalone `worker/src/crypto_utils.js` implements SHA-256 and HMAC-SHA256 fallback, cross-checked against Node crypto and SubtleCrypto with padding and key-size edge cases. Isolated SigV4 can use it when SubtleCrypto is absent; the official AWS vector passes both paths. These components are not wired into the public worker or production scoring and have not been independently audited.
+
+## Continuation — signed ticket primitive
+`worker/src/tickets.js` implements purpose-bound HMAC tickets and tests; not wired into handler or builds. A signed ticket alone does not prevent replay, establish a valid score, or provide a challenge board. Atomic consumption in a tested storage backend and score validation are prerequisites to enabling endpoints.
