@@ -170,3 +170,6 @@ The share card no longer treats the displayed top-50 count as the true total; th
 
 ## Runtime-config Stage 2 — small fixes
 Share card no longer substitutes «آفلاین» for a missing host; if no game address is available it draws no address. For a run with zero served requests, latency/hit/combo chips are hidden and the duration chip remains. The image-share button is primary and the text-share button secondary. `/api/daily` now omits the previously null `simVersion` rather than claiming a version. Mock-canvas tests inspect the zero-stat text and button classes; worker smoke tests assert omission. `node tests/run_all.js` passed. No actual phone or Arvan verification; previous share sample PNGs are from before this zero-stat correction and must not be treated as current screenshots until regenerated.
+
+### Runtime cache follow-up
+On a 60-second configuration refresh, an unchanged valid configuration now retains the existing service and limiter/cache state rather than resetting isolate counters mid-window. A VM test checks delayed uptake of newly supplied configuration after the cache interval. `node tests/run_all.js` passes; Arvan injection and lifecycle behavior remain unverified.
