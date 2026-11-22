@@ -13,12 +13,14 @@ const DT = 1 / 60;
 
 /* ---------- minimal browser stubs ---------- */
 global.__arcs = [];
+global.__texts = [];
 function fakeCtx() {
   return new Proxy({}, {
     get: (t, k) => {
       if (k === 'createLinearGradient' || k === 'createRadialGradient') return () => ({ addColorStop() {} });
       if (k === 'canvas') return {};
       if (k === 'measureText') return text => ({width: String(text).length * 24});
+      if (k === 'fillText') return text => {global.__texts.push(String(text));};
       if (k === 'arc') return (...a) => { global.__arcs.push(a); };
       return () => {};
     },
@@ -214,6 +216,7 @@ function testTrayLabels() {
 }
 function testWarmthRing() {
   global.__arcs = [];
+global.__texts = [];
   G.newRun(21, 'endless', { tutorial: false });
   G.placeNode(0);
   for (let i = 0; i < 60; i++) G.step(DT);

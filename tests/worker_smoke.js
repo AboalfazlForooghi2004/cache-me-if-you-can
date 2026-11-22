@@ -10,7 +10,7 @@ const {handleRequest,dailyAt}=require('../worker/dist/worker.js');
  const ping=await handleRequest(new Request('http://localhost/api/ping'));
  const p=await ping.json();assert.equal(p.ok,true);assert.equal(p.online,false);assert(Number.isFinite(p.t));const head=await handleRequest(new Request('http://localhost/',{method:'HEAD'}));assert.equal(head.status,200);assert.equal(await head.text(),'');
  const daily=await handleRequest(new Request('http://localhost/api/daily'));
- assert.equal(daily.status,200);const d=await daily.json();assert(/^\d{8}$/.test(d.date));assert(Number.isInteger(d.seed));assert.equal(d.verificationAvailable,false);
+ assert.equal(daily.status,200);const d=await daily.json();assert(/^\d{8}$/.test(d.date));assert(Number.isInteger(d.seed));assert.equal(d.verificationAvailable,false);assert(!Object.hasOwn(d,'simVersion'));
  assert.equal(dailyAt(new Date('2026-11-18T20:29:59Z')).date,'20261118');
  assert.equal(dailyAt(new Date('2026-11-18T20:30:00Z')).date,'20261119');
  const hash32=x=>{x|=0;x=Math.imul(x^(x>>>16),0x45d9f3b);x=Math.imul(x^(x>>>16),0x45d9f3b);return(x^(x>>>16))>>>0};

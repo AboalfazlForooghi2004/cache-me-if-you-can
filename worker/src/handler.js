@@ -6,7 +6,7 @@ function dailyAt(now) {
   let x=(Number(date)^0xC0FFEE)|0;
   x=Math.imul(x^(x>>>16),0x45d9f3b); x=Math.imul(x^(x>>>16),0x45d9f3b); x=(x^(x>>>16))>>>0;
   const jalali=new Intl.DateTimeFormat('fa-IR-u-ca-persian',{timeZone:'Asia/Tehran',year:'numeric',month:'long',day:'numeric'}).format(now);
-  return {date,jalali,seed:x,simVersion:null,headline:'امروز شبکه رو سریع‌تر کن!',verificationAvailable:false};
+  return {date,jalali,seed:x,headline:'امروز شبکه رو سریع‌تر کن!',verificationAvailable:false};
 }
 function jsonResponse(body,status) { return new Response(JSON.stringify(body), {status:status||200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}}); }
 async function diagnostics() {
