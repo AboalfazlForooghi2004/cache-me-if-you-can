@@ -5,6 +5,6 @@ assert.equal(fs.readFileSync('dist/index.html','utf8'),fs.readFileSync('index.ht
 assert.equal(fs.readFileSync('dist/worker.js','utf8'),fs.readFileSync('worker/dist/worker.js','utf8'));
 const env={...process.env,WORKER_SECRET:'test-only-secret-not-for-production'};
 const p=spawnSync(process.execPath,['build.js'],{env,encoding:'utf8'});
-assert.notEqual(p.status,0,'private configuration must fail closed');
+assert.equal(p.status,0,'public build must ignore secret environment');assert(!p.stdout.includes(env.WORKER_SECRET)&&!p.stderr.includes(env.WORKER_SECRET));
 assert(!fs.readFileSync('dist/worker.js','utf8').includes(env.WORKER_SECRET),'secret leaked in public bundle');
 console.log('PASS reproducible artifacts and fail-closed private configuration');

@@ -3,7 +3,7 @@
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const root=__dirname,secretKeys=['WORKER_SECRET','S3_ENDPOINT','S3_REGION','S3_BUCKET','S3_ACCESS_KEY','S3_SECRET_KEY','TRUSTED_CLIENT_IP_HEADER','S3_PATH_STYLE'];
 const wantPrivate=process.env.PRIVATE_BUILD==='1';
-if(!wantPrivate&&secretKeys.some(k=>process.env[k]))throw Error('Private configuration requires explicit PRIVATE_BUILD=1');
+// Runtime bundles never read process environment. PRIVATE_BUILD remains legacy only.
 let privateConfig=null;
 if(wantPrivate){
  if(secretKeys.slice(0,6).some(k=>!process.env[k])||Buffer.byteLength(process.env.WORKER_SECRET||'')<32)throw Error('Invalid private configuration');
@@ -14,22 +14,23 @@ if(wantPrivate){
 }
 const html=fs.readFileSync(path.join(root,'src/index.html'),'utf8'),handler=fs.readFileSync(path.join(root,'worker/src/handler.js'),'utf8');
 const og=fs.readFileSync(path.join(root,'assets/og_1200x630.png')).toString('base64');
-const id=crypto.createHash('sha256').update(html).update(handler).update(og).digest('hex').slice(0,16);
+const modules=['crypto_utils','sigv4','store','tickets','nickname','lite_validation','online_service'];
+let factories='';for(const name of modules){let source=fs.readFileSync(path.join(root,'worker/src',name+'.js'),'utf8');factories+=JSON.stringify('./'+name)+':function(module,exports,require){\n'+source+'\n},\n'}
+const loader="const factories={\n"+factories+"};const cache={};function localRequire(id){if(!factories[id])throw Error('Unknown module');if(!cache[id]){const m={exports:{}};cache[id]=m;factories[id](m,m.exports,localRequire)}return cache[id].exports;}\n";
+const runtimeTail=fs.readFileSync(path.join(root,'worker/src/runtime_entry.js'),'utf8');
+const id=crypto.createHash('sha256').update(html).update(handler).update(og).update(loader).update(runtimeTail).digest('hex').slice(0,16);
 const prelude=image=>"'use strict';\nconst BUILD_ID="+JSON.stringify(id)+";\nconst INDEX_HTML="+JSON.stringify(html)+";\nconst OG_BASE64="+JSON.stringify(image)+";\n"+handler+'\n';
-const publicBundle=image=>prelude(image)+"if (typeof addEventListener === 'function') addEventListener('fetch', e => e.respondWith(handleRequest(e.request)));\nif (typeof module !== 'undefined') module.exports = {handleRequest, dailyAt};\n";
+const publicBundle=image=>prelude(image)+loader+runtimeTail;
 for(const dir of ['dist','worker/dist','output'])fs.mkdirSync(path.join(root,dir),{recursive:true});
 for(const file of ['index.html','dist/index.html','output/index.html'])fs.writeFileSync(path.join(root,file),html);
 const bundle=publicBundle(og),lite=publicBundle('');
 for(const file of ['dist/worker.js','worker/dist/worker.js','output/worker.js'])fs.writeFileSync(path.join(root,file),bundle);
 for(const file of ['dist/worker.lite.js','worker/dist/worker.lite.js','output/worker.lite.js'])fs.writeFileSync(path.join(root,file),lite);
 if(privateConfig){
- const modules=['crypto_utils','sigv4','store','tickets','nickname','lite_validation','online_service'];
- let factories='';for(const name of modules){let source=fs.readFileSync(path.join(root,'worker/src',name+'.js'),'utf8');factories+=JSON.stringify('./'+name)+':function(module,exports,require){\n'+source+'\n},\n'}
- const loader="const factories={\n"+factories+"};const cache={};function localRequire(id){if(!factories[id])throw Error('Unknown module');if(!cache[id]){const m={exports:{}};cache[id]=m;factories[id](m,m.exports,localRequire)}return cache[id].exports;}\n";
  const privateTail="const PRIVATE_CONFIG="+JSON.stringify(privateConfig)+";\n"+fs.readFileSync(path.join(root,'worker/src/private_entry.js'),'utf8');
  const makePrivate=image=>prelude(image)+loader+privateTail;
  fs.mkdirSync(path.join(root,'private_dist'),{recursive:true,mode:0o700});fs.chmodSync(path.join(root,'private_dist'),0o700);
  for(const [name,image] of [['worker.js',og],['worker.lite.js','']]){const file=path.join(root,'private_dist',name);fs.writeFileSync(file,makePrivate(image),{mode:0o600});fs.chmodSync(file,0o600)}
 }
-console.log(`build ${id}: index ${Buffer.byteLength(html)} bytes; public worker ${Buffer.byteLength(bundle)} bytes; public lite ${Buffer.byteLength(lite)} bytes; public validation NONE; store NONE`);
+console.log(`build ${id}: index ${Buffer.byteLength(html)} bytes; public worker ${Buffer.byteLength(bundle)} bytes; public lite ${Buffer.byteLength(lite)} bytes; runtime online configuration; no build-time secrets in public bundles`);
 if(privateConfig)console.log('Private bundles written to ignored private_dist/; configuration is unverified on Arvan.');

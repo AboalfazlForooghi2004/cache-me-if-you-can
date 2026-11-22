@@ -1,4 +1,4 @@
-> **V2 work in progress — not ready for contest submission.** An offline five-stage survival campaign, daily modifiers, upgrades, second chance, local nickname entry and local missions/streak are available. There is no replay validation, confirmed persistent global leaderboard or AI integration. An experimental environment-configured private S3 build and optional browser flow pass mock tests but are not verified on Arvan. Public bundles stay store NONE / validation NONE. The daily endpoint reports `verificationAvailable:false`; scores are not submitted. Arvan deployment has not been tested. See `STATUS.md` for current results and missing requirements. Older V1 results below are historical.
+> **Runtime-configured online mode remains experimental and unverified on Arvan.** The same secret-free worker serves an offline game when configuration is missing or the storage health probe fails. An owner may configure private Object Storage through the Edge panel at runtime; score checks are heuristic, not replay verification. See `OWNER_TODO.md` and `STATUS.md`.
 
 # کَشَم کن اگه می‌تونی! — Cache Me If You Can
 
@@ -106,7 +106,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 ## Current V2 build slice
 
 Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
-`src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`, `dist/worker.lite.js` (without OG image), and `output/` copies. Public workers remain store NONE / validation NONE. Shared simulation extraction and replay validation are **not implemented**. An explicit environment-configured experimental private build is mock-tested only; see `OWNER_TODO.md`.
+`src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`, `dist/worker.lite.js` (without OG image), and `output/` copies. These secret-free workers enable the S3/LITE prototype only when valid runtime configuration and a successful health probe are present; otherwise the game stays offline-first. Replay validation is **not implemented**; see `OWNER_TODO.md`.
 `/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
 replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.
 
@@ -122,4 +122,4 @@ features or contest compliance have passed QA.
 Personal leaderboard screens have been removed. Best score and local daily missions/streak remain; the only leaderboard being developed is the online daily board. Earlier historical descriptions of a personal board above are superseded.
 
 ### Online prototype security warning
-The private build defaults to `x-real-ip`, or accepts an ordered comma-separated `TRUSTED_CLIENT_IP_HEADER`. Such headers are trustworthy only if the platform overwrites them; this is not verified for Arvan Edge. Missing/invalid IP skips per-IP limiting; an isolate-local write cap remains. If S3 conditional create is unsupported, nonce protection is best effort, not globally atomic. LITE checks plausibility, not replay. `/__diag` writes and deletes small temporary test objects and caches its result for 60 seconds; usage may have costs. Do not publish secret-bearing bundles as static files. Public builds have no storage.
+Runtime configuration defaults to `x-real-ip`, or accepts an ordered comma-separated `TRUSTED_CLIENT_IP_HEADER`. Such headers are trustworthy only if the platform overwrites them; this is not verified for Arvan Edge. Missing/invalid IP skips per-IP limiting; an isolate-local write cap remains. If S3 conditional create is unsupported, nonce protection is best effort, not globally atomic. LITE checks plausibility, not replay. `/__diag` writes and deletes small temporary test objects and caches its result for 60 seconds; usage may have costs. Do not publish secret-bearing bundles as static files. Without valid runtime configuration the workers do not use storage.
