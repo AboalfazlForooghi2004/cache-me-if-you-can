@@ -10,6 +10,8 @@ function plausibleRun(run,ticket,now){
  if(fastCount>served||maxCombo>fastCount||served+timeouts>Math.ceil(duration*20)+40)return false;
  // Deliberately broad: no guarantee of rejecting plausible fabricated statistics.
  if(score>Math.ceil(duration*1800)+3000)return false;
+ // Conservative ceiling on per-request points plus wave rewards; not proof of honest play.
+ if(score>served*1350+(Math.floor(duration/28)+1)*600)return false;
  return true;
 }
 async function validateAndConsume({key,token,run,now=Math.floor(Date.now()/1000),store,subtle}){
