@@ -13,9 +13,9 @@ function plausibleRun(run,ticket,now){
  return true;
 }
 async function validateAndConsume({key,token,run,now=Math.floor(Date.now()/1000),store,subtle}){
- if(!store||typeof store.putIfAbsent!=='function')return {ok:false,reason:'unavailable'};
+ if(!store||(typeof store.singlePut!=='function'&&typeof store.putIfAbsent!=='function'))return {ok:false,reason:'unavailable'};
  let ticket;try{ticket=await verifyTicket({key,kind:'start',token,now,subtle})}catch(e){return {ok:false,reason:'unavailable'}}
  if(!ticket||!plausibleRun(run,ticket,now))return {ok:false,reason:'invalid'};
- try{for(const [n,expiry] of recentNonces){if(expiry<=now)recentNonces.delete(n)}if(recentNonces.has(ticket.nonce))return {ok:false,reason:'replayed'};if(recentNonces.size>=10000)return {ok:false,reason:'unavailable'};recentNonces.set(ticket.nonce,ticket.exp);const k='nonce/'+ticket.nonce;if(typeof store.get==='function'&&await store.get(k))return {ok:false,reason:'replayed'};const created=await store.putIfAbsent(k,'1');return created?{ok:true,ticket}:{ok:false,reason:'replayed'}}catch(e){return {ok:false,reason:'unavailable'}}
+ try{for(const [n,expiry] of recentNonces){if(expiry<=now)recentNonces.delete(n)}if(recentNonces.has(ticket.nonce))return {ok:false,reason:'replayed'};if(recentNonces.size>=10000)return {ok:false,reason:'unavailable'};recentNonces.set(ticket.nonce,ticket.exp);const k='nonce/'+ticket.nonce;const created=typeof store.singlePut==='function'?await store.singlePut(k,'1',false):await store.putIfAbsent(k,'1');return created?{ok:true,ticket}:{ok:false,reason:'replayed'}}catch(e){return {ok:false,reason:'unavailable',stage:'nonce'}}
 }
 module.exports={plausibleRun,validateAndConsume};
