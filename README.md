@@ -107,8 +107,7 @@ python3 tests/visual_qa.py            # اسکرین‌شات‌ها در tests/
 
 Run `node tests/run_all.js` (it rebuilds first) or `node build.js`; build inputs are
 `src/index.html` and `worker/src/handler.js`. Outputs: `dist/index.html`, `dist/worker.js`, `dist/worker.lite.js` (without OG image), and `output/` copies. These secret-free workers enable the S3/LITE prototype only when valid runtime configuration and a successful health probe are present; otherwise the game stays offline-first. Replay validation is **not implemented**; see `OWNER_TODO.md`.
-`/__diag` is a preliminary local-tested diagnostic, **UNVERIFIED ON ARVAN**. Do not
-replace the existing live game with this unfinished prototype; see `OWNER_TODO.md`.
+Diagnostic endpoints `/__diag` and `/__s3` are disabled and return 404 in this build. This change is mock-tested only; it takes effect in Arvan only after the owner uploads this new worker. See `OWNER_TODO.md`.
 
 ## Shipping override — partial progress
 
@@ -122,4 +121,4 @@ features or contest compliance have passed QA.
 Personal leaderboard screens have been removed. Best score and local daily missions/streak remain; the only leaderboard being developed is the online daily board. Earlier historical descriptions of a personal board above are superseded.
 
 ### Online prototype security warning
-Runtime configuration defaults to `x-real-ip`, or accepts an ordered comma-separated `TRUSTED_CLIENT_IP_HEADER`. Such headers are trustworthy only if the platform overwrites them; this is not verified for Arvan Edge. Missing/invalid IP skips per-IP limiting; an isolate-local write cap remains. If S3 conditional create is unsupported, nonce protection is best effort, not globally atomic. LITE checks plausibility, not replay. `/__diag` writes and deletes small temporary test objects and caches its result for 60 seconds; usage may have costs. Do not publish secret-bearing bundles as static files. Without valid runtime configuration the workers do not use storage.
+Runtime configuration defaults to `x-real-ip`, or accepts an ordered comma-separated `TRUSTED_CLIENT_IP_HEADER`. Such headers are trustworthy only if the platform overwrites them; this is not verified for Arvan Edge. Missing/invalid IP skips per-IP limiting; an isolate-local write cap remains. If S3 conditional create is unsupported, nonce protection is best effort, not globally atomic. LITE checks plausibility, not replay. The public diagnostic endpoints are disabled, but legitimate public APIs still use S3 and may have costs; this is not a general abuse-prevention guarantee. Do not publish secret-bearing bundles as static files. Without valid runtime configuration the workers do not use storage.
